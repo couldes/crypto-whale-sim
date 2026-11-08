@@ -2074,6 +2074,12 @@ if (HAS_DOM){
   const qRole = (function(){ try { return new URLSearchParams(location.search).get('role'); } catch (_) { return null; } })();
   if (qRole && ROLES[qRole]) startGame(qRole);
   else { applyRoleUI(); render(); }
+  // ?sheet=1 直接展开下单浮层（调试与分享用）
+  try {
+    if (new URLSearchParams(location.search).get('sheet') === '1'){
+      setTimeout(() => { openSheet(1); render(); }, 80);
+    }
+  } catch (_) {}
   setInterval(loop, 33);
 }
 </script>
