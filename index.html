@@ -100,9 +100,10 @@ details.more .v{color:#dcdcdc;text-align:right}
 .pr-sp{flex:1}
 .malg{font-size:10.5px;color:var(--dim3);display:flex;align-items:center;gap:3px}
 .malg i{width:8px;height:2px;display:inline-block;margin-left:5px}
-.ctabpane{display:flex;flex-direction:column;min-height:0;flex:1}
+.ctabpane{display:flex;flex-direction:column;min-height:0;flex:1 1 0;overflow:hidden}
 .ctabpane.hide{display:none}
-#chart{width:100%;height:auto;flex:1;min-height:220px;display:block;background:#000}
+.chartbox{position:relative;flex:1 1 0;min-height:220px}
+#chart{position:absolute;inset:0;width:100%;height:100%;display:block;background:#000}
 canvas.small{width:100%;height:132px;display:block;background:#000;margin:0 0 8px}
 #logs{font-size:12px;padding:6px 12px}
 #logs>div{padding:3px 0;border-bottom:1px solid #141414;line-height:1.55;color:#b8b8b8}
@@ -290,7 +291,8 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
   .ctabpane[data-cpane="depth"],.ctabpane[data-cpane="logs"]{order:3;max-height:58vh}
   .periodrow{order:0;padding:6px 8px}
   .malg{display:none}
-  #chart{height:288px;min-height:0;flex:none}
+  .chartbox{height:288px;min-height:0;flex:none}
+  #chart{position:absolute}
 
   /* 右栏：订单簿 / 成交 切换 */
   .side-r [data-mp]{order:2}
@@ -354,7 +356,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
   .pk-card{padding:13px 12px}
 }
 @media (max-width:390px){
-  #chart{height:250px}
+  .chartbox{height:250px}
   .pairhead .px b{font-size:16px}
 }
 </style>
@@ -428,7 +430,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
         <span class="pr-sp"></span>
         <span class="malg"><i style="background:#27c6da"></i>MA5<i style="background:#ffa726"></i>MA10<i style="background:#ca3f64"></i>MA20</span>
       </div>
-      <canvas id="chart"></canvas>
+      <div class="chartbox"><canvas id="chart"></canvas></div>
     </div>
 
     <div class="ctabpane hide" data-cpane="orders">
@@ -660,7 +662,7 @@ function init(){
   mmRequote(true);
   requotePerpMM(true);
   // 预跑 1 小时历史
-  for (let i = 0; i < 3600; i++) step();
+  for (let i = 0; i < 14400; i++) step();
   LOGS = []; G.newsCd = 0;
   log('🟢 引擎就绪。MOON/USDT 现货 ' + fmtP(G.last) + '，永续 ' + fmtP(G.lastP) + '，资金费率 ' + (G.funding * 100).toFixed(3) + '%');
 }
@@ -1766,7 +1768,7 @@ if (HAS_DOM){
   }
 
   let frame = 0;
-  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); drawTeamStat(); drawOrders(); syncTradeUI(); }
+  function render(){ drawTop(); drawPair(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); drawTeamStat(); drawOrders(); syncTradeUI(); }
   function drawOrders(){
     const el = $('ordList'); if (!el) return;
     const os = U.orders || [];
