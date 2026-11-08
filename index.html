@@ -53,6 +53,53 @@ table.st td{padding:1px 4px;border-bottom:1px solid #1a2230}
 #modal .box{background:var(--pn);border:1px solid #2a3550;border-radius:10px;padding:18px;max-width:520px;width:92%}
 canvas.small{width:100%;height:110px;display:block;background:#0d1119;border-radius:6px}
 .tag{font-size:10px;padding:0 4px;border-radius:3px;background:#1e293b;color:#94a3b8;margin-left:4px}
+/* ---- 角色选择 ---- */
+#picker{position:fixed;inset:0;background:rgba(6,9,14,.94);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow:auto}
+#picker.hide{display:none}
+.pk{max-width:940px;width:100%}
+.pk h2{margin:0 0 6px;font-size:20px;color:#e2e8f0;letter-spacing:.5px}
+.pk-sub{margin:0 0 16px;color:#5b6b80;font-size:12.5px}
+.pk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pk-card{text-align:left;background:#111824;border:1px solid #22304a;border-radius:12px;padding:16px 14px;cursor:pointer;display:flex;flex-direction:column;gap:7px;transition:.16s;color:#cbd5e1;font-family:inherit}
+.pk-card:hover{border-color:#3b82f6;background:#152031;transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,0,0,.45)}
+.pk-ic{font-size:26px;line-height:1}
+.pk-card b{font-size:15px;color:#f1f5f9}
+.pk-tag{font-size:11px;color:#f59e0b}
+.pk-desc{font-size:11.5px;color:#7d8da3;line-height:1.6;flex:1}
+.pk-lv{font-size:10.5px;color:#4b5a70;border-top:1px solid #1c2637;padding-top:6px}
+.pk-foot{margin:16px 0 0;color:#3f4d61;font-size:10.5px;text-align:center}
+@media (max-width:720px){.pk-grid{grid-template-columns:1fr}.pk h2{font-size:17px}}
+
+/* ---- 顶栏：常显核心 + 详情浮层 ---- */
+#topbar{position:relative}
+.chip.dot{padding:2px 6px;display:inline-flex;align-items:center}
+details.more{position:relative;display:inline-block}
+details.more>summary{list-style:none;cursor:pointer;color:#64748b;font-size:11px;padding:2px 8px;border:1px solid var(--bd);border-radius:6px;background:#161d2b;user-select:none}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary:hover{color:#cbd5e1;border-color:#2a3550}
+details.more[open]>summary{color:#e2e8f0;border-color:#3b4a66}
+details.more .morebox{position:absolute;right:0;top:calc(100% + 4px);z-index:20;background:#131a26;border:1px solid #2a3550;border-radius:8px;padding:8px 10px;min-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:grid;gap:3px}
+details.more .morebox>div{display:flex;justify-content:space-between;gap:14px;font-size:11px;white-space:nowrap}
+details.more .k{color:#5b6b80}
+details.more .v{color:#cbd5e1;text-align:right}
+
+/* ---- 渐进式披露 ---- */
+details.intro{margin-bottom:4px}
+details.intro summary{color:#94a3b8;font-size:11px;padding:2px 0}
+details.intro p{margin:3px 0;font-size:11px;color:#8494a8;line-height:1.5}
+details.adv{border-top:1px solid #1a2230;margin-top:6px;padding-top:4px}
+details.adv>summary{color:#9aa9bd;font-size:11.5px;padding:3px 0;list-style:none;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+details.adv>summary::-webkit-details-marker{display:none}
+details.adv>summary::before{content:"▸";color:#475569;font-size:10px;transition:transform .15s;display:inline-block}
+details.adv[open]>summary::before{transform:rotate(90deg)}
+details.adv>summary:hover{color:#cbd5e1}
+.hint{color:#4b5a70;font-size:10px;font-weight:400}
+p.note{color:#4b5a70;font-size:10px;line-height:1.45;margin:2px 0 5px}
+label.chk{display:flex;align-items:center;gap:5px;font-size:11px;color:#8494a8;cursor:pointer}
+label.chk input{width:auto;margin:0}
+h3{margin:8px 0 5px;font-size:12px;color:#94a3b8;letter-spacing:.3px;font-weight:600}
+h3:first-child{margin-top:2px}
+
 /* ---- 响应式（平板/手机公开访问适配） ---- */
 @media (max-width:1180px){
   #layout{grid-template-columns:300px 1fr;height:auto}
@@ -78,60 +125,88 @@ canvas.small{width:100%;height:110px;display:block;background:#0d1119;border-rad
 <div id="layout">
   <div class="col">
     <div class="p" style="flex:0 0 auto">
-      <details open><summary>📖 你是庄家：玩法与真实性说明</summary>
-        <p>标的：<b>MOON/USDT</b>（微市值山寨币）。你有 <b>500万 USDT</b>。流通 10 亿枚（8 亿可交易 + 2 亿团队锁定）。</p>
-        <p><b>真实机制</b>：限价订单簿逐档撮合；做市商/套利机器人/趋势机器人/各类散户（追涨、抄底、止盈、深套不卖）实时博弈；永续合约有<b>资金费率</b>与<b>强平/止损连环爆仓</b>；价格冲击由盘口深度涌现（吃单越深滑点越大）；拉高后没有承接会被套利盘与均值回归打回来。</p>
-        <p><b>典型剧本</b>：低位挂单悄悄吸筹 → 对敲刷量造热度 → 幌骗挂单造势 → 快速拉盘引发 FOMO → 高位分批出货 / 或砸盘插针收割止损与强平 → 回收筹码。仓位+高杠杆自己也强平，别玩脱。</p>
-        <p class="dim">⚠️ 仅用于教学与研究（理解操纵机制与风控检测）。真实市场操纵违法。</p>
+      <details class="intro"><summary>📖 玩法说明 · <span id="introRole">你是庄家</span></summary>
+        <p id="introText">标的 <b>MOON/USDT</b>（微市值山寨币），流通 10 亿枚。</p>
+        <p class="dim">⚠️ 仅用于教学与研究（理解操纵机制与风控识别）。真实市场操纵违法。</p>
       </details>
-      <h3>⚙️ 模拟控制</h3>
       <div class="row">
-        <button class="btn" id="bPause">⏸ 暂停</button>
+        <button class="btn" id="bPause">⏸</button>
         <button class="btn" id="bPlay">▶ 1x</button>
         <button class="btn" id="bFast">▶▶ 8x</button>
-        <button class="btn" id="bStep">单步</button>
-        <button class="btn" id="bHop">快进1小时</button>
-        <button class="btn warn" id="bReset">重置</button>
-        <button class="btn warn" id="bSettle">结算</button>
+        <button class="btn sm" id="bHop">+1h</button>
+        <button class="btn warn sm" id="bSettle">结算</button>
       </div>
-      <div class="row"><label><input type="checkbox" id="cGod"> 上帝视角（指数锚/止损簇/散户资金）</label></div>
     </div>
+
     <div class="p" style="flex:1">
-      <h3>🐋 现货操作 <span class="dim">(数量: MOON)</span></h3>
-      <div class="row"><input id="iQtyS" class="wide" value="200000"> <span class="dim">MOON</span></div>
+      <h3>🐋 交易</h3>
+      <div class="row"><input id="iQtyS" class="wide" value="200000"><span class="dim">MOON</span></div>
       <div class="row">
         <button class="btn buy" id="bBuyS">市价买</button>
         <button class="btn sell" id="bSellS">市价卖</button>
-        <button class="btn sm" id="bPct1">资金1%</button><button class="btn sm" id="bPct5">5%</button>
-        <button class="btn sm" id="bPct25">仓位25%</button><button class="btn sm" id="bPctAll">全仓卖</button>
       </div>
-      <div class="row"><input id="iLmtP" style="width:70px" value="0.0000"> <input id="iLmtQ" class="wide" value="200000"></div>
       <div class="row">
-        <button class="btn buy" id="bLmtB">限价买(挂单)</button>
-        <button class="btn sell" id="bLmtS">限价卖(挂单)</button>
+        <button class="btn sm" id="bPct1">买1%</button><button class="btn sm" id="bPct5">买5%</button>
+        <button class="btn sm" id="bPct25">卖25%</button><button class="btn sm" id="bPctAll">全卖</button>
       </div>
-      <div class="row dim" style="font-size:10px">限价价默认 0 = 当前价±1%，可手动填</div>
-      <h3>🎭 操盘工具</h3>
-      <div class="row"><input id="iWashQ" class="wide" value="100000"><button class="btn warn" id="bWash">对敲刷量</button></div>
-      <div class="row dim" style="font-size:10px">分仓自成交：制造真实成交量→推高热度/吸引跟风；有被风控识别的概率，双边手续费照付</div>
-      <div class="row"><input id="iSpoofQ" class="wide" value="800000">
-        <button class="btn" id="bSpoofB">挂买墙(假支撑)</button>
-        <button class="btn" id="bSpoofS">挂卖墙(假压力)</button>
-        <button class="btn sm" id="bCancelAll">撤掉我的所有挂单</button>
-      </div>
-      <div class="row dim" style="font-size:10px">幌骗：大额假单影响跟风盘信心；被真实吃掉就成真单了；频繁挂撤会推高风控暴露</div>
-      <h3>⚡ 快捷</h3>
-      <div class="row"><button class="btn buy" id="bPump">🚀 拉盘(吃5档)</button><button class="btn sell" id="bDump">💥 砸盘(吃5档)</button></div>
-      <h3>🎰 永续合约</h3>
-      <div class="row">杠杆 <select id="iLev"><option>2</option><option>3</option><option selected>5</option><option>10</option><option>20</option></select>
-        <input id="iQtyP" class="wide" value="2000000"><span class="dim">MOON</span></div>
       <div class="row">
-        <button class="btn buy" id="bLongP">开多</button>
-        <button class="btn sell" id="bShortP">开空</button>
-        <button class="btn" id="bHalfP">平50%</button>
-        <button class="btn" id="bCloseP">全平</button>
+        <button class="btn buy sm" id="bPump">🚀 拉盘</button>
+        <button class="btn sell sm" id="bDump">💥 砸盘</button>
       </div>
-      <div class="row dim" style="font-size:10px">全仓保证金：总权益跌破名义价值 0.6% 即强平。合约吃单会直接推动标记价格 → 猎杀止损/强平</div>
+
+      <details class="adv">
+        <summary>🎭 操盘工具 <span class="hint">对敲 / 幌骗</span></summary>
+        <div class="row"><input id="iWashQ" class="wide" value="100000"><button class="btn warn sm" id="bWash">对敲刷量</button></div>
+        <p class="note">自成交制造成交量 → 推高热度、吸引跟风；有被风控识别概率，双边手续费照付</p>
+        <div class="row"><input id="iSpoofQ" class="wide" value="800000"></div>
+        <div class="row">
+          <button class="btn sm" id="bSpoofB">挂买墙</button>
+          <button class="btn sm" id="bSpoofS">挂卖墙</button>
+          <button class="btn sm" id="bCancelAll">全撤</button>
+        </div>
+        <p class="note">幌骗：大额假单影响跟风盘信心；被真实吃掉就成真单；频繁挂撤推高风控暴露</p>
+      </details>
+
+      <details class="adv">
+        <summary>📋 限价挂单 <span class="hint">耐心吸筹/派发</span></summary>
+        <div class="row"><input id="iLmtP" style="width:70px" value="0"><input id="iLmtQ" class="wide" value="200000"></div>
+        <div class="row">
+          <button class="btn buy sm" id="bLmtB">限价买</button>
+          <button class="btn sell sm" id="bLmtS">限价卖</button>
+        </div>
+        <p class="note">价格填 0 = 当前价±1%</p>
+      </details>
+
+      <details class="adv">
+        <summary>🎰 永续合约 <span class="hint">杠杆 / 猎杀止损</span></summary>
+        <div class="row">杠杆 <select id="iLev"><option>2</option><option>3</option><option selected>5</option><option>10</option><option>20</option></select>
+          <input id="iQtyP" class="wide" value="2000000"><span class="dim">MOON</span></div>
+        <div class="row">
+          <button class="btn buy sm" id="bLongP">开多</button>
+          <button class="btn sell sm" id="bShortP">开空</button>
+          <button class="btn sm" id="bHalfP">平50%</button>
+          <button class="btn sm" id="bCloseP">全平</button>
+        </div>
+        <p class="note">全仓保证金：总权益跌破名义价值 0.6% 即强平。合约吃单直接推动标记价格 → 猎杀止损/强平</p>
+      </details>
+
+      <div id="teamPanel" style="display:none">
+        <h3>🏢 项目方操作</h3>
+        <div class="row"><span class="dim" id="teamStat" style="font-size:10.5px"></span></div>
+        <div class="row">
+          <button class="btn sm" id="bUnlock">🔓 解锁 12%</button>
+          <button class="btn buy sm" id="bDefend">🛡 护盘买入</button>
+          <button class="btn sell sm" id="bDistribute">📤 高位派发</button>
+        </div>
+        <div class="row"><input id="iTeamQty" class="wide" value="5000000"><span class="dim">MOON</span></div>
+        <p class="note">解锁：把锁仓转入可售余额（稀释流通，通常压价）。护盘：真金白银托底，但会消耗金库。派发：挂卖单慢慢出货，需有人接盘。</p>
+      </div>
+
+      <details class="adv">
+        <summary>⚙️ 更多</summary>
+        <div class="row"><button class="btn sm" id="bStep">单步</button><button class="btn warn sm" id="bReset">重置</button></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="cGod"> 上帝视角<span class="hint">指数锚/止损簇/散户资金</span></label></div>
+      </details>
     </div>
   </div>
 
@@ -169,6 +244,31 @@ canvas.small{width:100%;height:110px;display:block;background:#0d1119;border-rad
   </div>
 </div>
 <div id="modal"><div class="box" id="modalBox"></div></div>
+<div id="picker"><div class="pk">
+  <h2>选择你的角色</h2>
+  <p class="pk-sub">同一个市场，三种视角。你可以随时重开换一个身份。</p>
+  <div class="pk-grid">
+    <button class="pk-card" data-role="whale">
+      <span class="pk-ic">🐋</span><b>鲸鱼</b>
+      <span class="pk-tag">500 万 USDT · 从零仓位开始</span>
+      <span class="pk-desc">主动操纵者。吸筹、对敲造势、幌骗、拉盘、派发。你要和项目方抢出货窗口，也要提防散户不接盘。</span>
+      <span class="pk-lv">难度 ★★★ · 主玩法</span>
+    </button>
+    <button class="pk-card" data-role="team">
+      <span class="pk-ic">🏢</span><b>项目方</b>
+      <span class="pk-tag">2 亿锁定币 + 300 万金库</span>
+      <span class="pk-desc">对手盘视角。你要按节奏解锁稀释、在崩盘时护盘、在狂热时高位派发。鲸鱼拉盘是你的出货机会，也可能是你的陷阱。</span>
+      <span class="pk-lv">难度 ★★☆ · 策略经营</span>
+    </button>
+    <button class="pk-card" data-role="retail">
+      <span class="pk-ic">🧑</span><b>散户</b>
+      <span class="pk-tag">5000 USDT 本金</span>
+      <span class="pk-desc">受害者视角。没有信息优势，看到的是被操纵过的盘口和 K 线。体验热度、幌骗墙和 FOMO 如何一步步把你套进去。</span>
+      <span class="pk-lv">难度 ★☆☆ · 体验向</span>
+    </button>
+  </div>
+  <p class="pk-foot">⚠️ 仅用于教学与研究，理解操纵机制与风控识别。真实市场操纵违法。</p>
+</div></div>
 
 <script>
 'use strict';
@@ -196,6 +296,24 @@ function log(msg, cls){ LOGS.unshift({ t: G ? G.t : 0, msg, cls: cls || '' }); i
 const FEE_ST = 0.0005, FEE_SM = 0.0002;      // 现货 吃/挂
 const FEE_PT = 0.0004, FEE_PM = 0.00015;     // 合约 吃/挂
 const FUNDING_EVERY = 8 * 3600;
+
+/* ---------- 玩家角色 ----------
+   whale  鲸鱼：500万U，从零仓位开始，靠操纵获利（主玩法）
+   team   项目方：持2亿锁定币+300万U金库，靠解锁/护盘/派发获利（对手盘视角）
+   retail 散户：5000U，只能被动应对市场，体验被收割（受害者视角）
+------------------------------------------------ */
+const ROLES = {
+  whale:  { key: 'whale',  name: '鲸鱼',   icon: '🐋', cash: 5e6,  q: 0,       locked: 0,
+            tag: '你有 500 万 USDT，从零仓位开始。靠吸筹-造势-派发获利。',
+            hint: '主玩法：你能操纵市场，但也被项目方与散户反制。' },
+  team:   { key: 'team',   name: '项目方', icon: '🏢', cash: 3e6,  q: 0,       locked: 2e8,
+            tag: '金库 300 万 USDT + 2 亿锁定代币。靠解锁节奏、护盘、高位派发获利。',
+            hint: '对手盘视角：鲸鱼拉盘时你要判断跟不跟、出不出货。' },
+  retail: { key: 'retail', name: '散户',   icon: '🧑', cash: 5000, q: 0,       locked: 0,
+            tag: '5000 USDT 本金。没有信息优势，只能跟着 K 线和情绪走。',
+            hint: '受害者视角：体验被对敲热度、幌骗墙和拉盘 FOMO 收割的全过程。' }
+};
+let ROLE = ROLES.whale;      // 当前角色（init 前默认鲸鱼）
 const FLOAT_TRAD = 8.0e8;                     // 可交易流通
 const CANDLE = 60, CANDLES_MAX = 480;
 const NEWS = [
@@ -268,9 +386,23 @@ function init(){
     washBoost: 0, fundT: FUNDING_EVERY, funding: 0.0001,
     candles: [], cur: null, ph: [], marks: [],
     peak: 0.02, sellNotional: 0, sellQty: 0, cascQtyTotal: 0, harvest: 0,
-    peakEq: 5e6, maxDD: 0, liqNotional: 0, newsCd: 0
+    peakEq: 5e6, maxDD: 0, liqNotional: 0, newsCd: 0,
+    // 项目方（Team）：持 2 亿锁定币，按解锁节奏进入流通；有护盘/派发/解锁三类行为
+    team: { locked: 2e8, liquid: 0, sold: 0, bought: 0, usdt: 3e6,
+            unlockPct: 0.12, unlockCd: 0, cd: 0, mode: 'idle',
+            defendP: 0, defendCd: 0, sellCd: 0, mood: 0.5 }
   };
-  U = { cash: 5e6, q: 0, costP: 0, pos: null, defLev: 5, orders: [], realized: 0, fees: 0, maxHold: 0, uVol24: 0, washes: 0, spoofCancels: 0, detected: 0, liqed: 0 };
+  // 按角色初始化玩家账户
+  U = { cash: ROLE.cash, q: ROLE.q, costP: 0, pos: null, defLev: 5, orders: [], realized: 0, fees: 0,
+        maxHold: 0, uVol24: 0, washes: 0, spoofCancels: 0, detected: 0, liqed: 0,
+        initEq: ROLE.cash, role: ROLE.key };
+  // 项目方：若玩家就是项目方，把锁定币与金库交给玩家控制
+  if (ROLE.key === 'team'){
+    G.team.locked = ROLE.locked; G.team.liquid = 0; G.team.usdt = ROLE.cash;
+    G.team.playerControlled = true;
+  } else {
+    G.team.playerControlled = false;
+  }
   initAgents();
   perpClusters = [];
   for (let i = 0; i < 9; i++) spawnCluster(null);
@@ -659,6 +791,74 @@ function onCascade(c, isLiq){
   if (isLiq && n > 3e4) log('🔴 ' + (c.side > 0 ? '多头' : '空头') + '强平 ' + fmtU(n) + ' USDT @' + fmtP(G.lastP), 'warn');
 }
 
+/* ---------- 项目方（Team）----------
+   持 2 亿锁定代币。真实项目方行为：周期性解锁（稀释）→ 下压价格；
+   价格超跌时护盘（真金白银托底，同时也护住自己的解锁价值）；
+   价格狂热时高位派发（比鲸鱼更早、更慢、更隐蔽——挂在卖档里慢慢吃）。
+   这是鲸鱼天然的对手盘：拉盘时项目方在卖，砸盘时项目方在买。
+   文献：Token Unlock 事件研究（解锁前 CAAR 显著为负）；项目方金库管理惯例。
+------------------------------------------------ */
+function teamStep(){
+  const T = G.team;
+  if (T.playerControlled) return;   // 玩家扮演项目方时，由玩家操作
+  if (T.cd > 0) T.cd--;
+  if (T.defendCd > 0) T.defendCd--;
+  if (T.sellCd > 0) T.sellCd--;
+
+  // --- 1) 解锁：每 ~8h 解锁剩余锁仓的 12%，进入可售余额（逐步稀释）---
+  if (T.unlockCd > 0) T.unlockCd--;
+  else if (T.locked > 1e5){
+    const amt = T.locked * T.unlockPct;
+    T.locked -= amt; T.liquid += amt;
+    T.unlockCd = Math.floor(rnd(6, 11) * 3600);
+    pushLog('🔓 项目方解锁 ' + fmtQ(amt) + ' MOON 进入流通（剩余锁定 ' + fmtQ(T.locked) + '）', 'warn');
+  }
+
+  if (!T.liquid || T.liquid < 1e4) return;
+
+  const dev = G.last / G.fund - 1;            // 相对基本面的偏离
+  const hot = G.heat;
+
+  // --- 2) 护盘：跌破锚 -18% 且有余钱 → 分批买入托底 ---
+  const dump = ret10();   // 20min 变化
+  if ((dev < -0.12 || dump < -0.06) && T.usdt > 2e5 && T.defendCd <= 0 && Math.random() < 0.035){
+    const spend = Math.min(T.usdt * rnd(0.03, 0.07), 1.2e5);
+    const qty = spend / G.last;
+    const r = exec(G.spot, 1, qty, 'team', 'team');
+    if (r.filled > 0){
+      T.usdt -= r.filled * r.vwap; T.bought += r.filled; T.liquid += r.filled;
+      T.defendCd = Math.floor(rnd(90, 300));
+      T.mood = clamp(T.mood + 0.06, 0, 1);
+      pushLog('🛡 项目方护盘：买入 ' + fmtQ(r.filled) + ' @' + fmtP(r.vwap), 'good');
+    }
+  }
+
+  // --- 3) 派发：价格高于锚 +25% 且热度高（有人接盘）→ 挂卖单慢慢出 ---
+  const canSell = dev > 0.15 && hot > 0.60;
+  if (canSell && T.sellCd <= 0 && T.liquid > 1e5){
+    // 挂在自己愿意接受的价格（略高于现价，不砸盘），分批
+    const q = Math.min(T.liquid * rnd(0.02, 0.05), 6e6);
+    const p = roundP(Math.max(G.last * rnd(1.004, 1.022), G.fund * 1.18));
+    const ref = { onFill: (fq, fp) => { T.liquid -= fq; T.usdt += fq * fp; T.sold += fq; T.mood = clamp(T.mood + 0.02, 0, 1); } };
+    addOrder(G.spot, -1, p, q, 'team', ref);
+    T.sellCd = Math.floor(rnd(40, 110));
+    T.mode = 'distribute';
+    pushLog('📤 项目方挂卖 ' + fmtQ(q) + ' @' + fmtP(p) + '（高位派发）', 'warn');
+  }
+
+  // --- 4) 恐慌抛售：极端恐慌 + 已解锁余额大 → 被迫减持补充运营资金 ---
+  if (G.fear > 0.55 && dev < -0.10 && T.usdt < 4e5 && T.sellCd <= 0 && T.liquid > 2e5 && Math.random() < 0.03){
+    const q = Math.min(T.liquid * 0.02, 3e6);
+    const r = exec(G.spot, -1, q, 'team', 'team');
+    if (r.filled > 0){
+      T.liquid -= r.filled; T.usdt += r.filled * r.vwap; T.sold += r.filled;
+      T.mood = clamp(T.mood - 0.10, 0, 1);
+      T.sellCd = Math.floor(rnd(200, 500));
+      pushLog('😰 项目方被迫减持 ' + fmtQ(r.filled) + ' @' + fmtP(r.vwap), 'bad');
+    }
+  }
+}
+function pushLog(msg, cls){ log(msg, cls || ''); }
 /* ---------- 机器人 ---------- */
 function trendBotStep(){
   const b = trendBot;
@@ -691,6 +891,7 @@ function arbStep(){
 
 /* ---------- 用户账户 ---------- */
 function userEquity(){ return U.cash + U.q * G.last + upnl(); }
+function baseEq(){ return U && U.initEq ? U.initEq : 5e6; }
 function upnl(){ return U.pos ? U.pos.side * U.pos.qty * (G.markE - U.pos.entry) : 0; }
 function applyPerpFill(dQty, p, fee){
   if (fee > 0){ U.fees += fee; U.cash -= fee; }
@@ -855,7 +1056,7 @@ function step(){
     G.newsCd = Math.floor(rnd(2000, 9000));
   }
   // 2) 各方流动性
-  retailSpot(); retailPerp(); trendBotStep(); arbStep();
+  retailSpot(); retailPerp(); trendBotStep(); arbStep(); teamStep();
   // 3) 强平/止损级联
   riskEngine();
   // 4) 永久性价格冲击（Kyle λ）+ 均值回归
@@ -985,7 +1186,7 @@ function step(){
 
 /* ---------- 结算：只呈报事实，不打分 ---------- */
 function grade(){
-  const eq = userEquity(), ret = eq / 5e6 - 1;
+  const eq = userEquity(), ret = eq / baseEq() - 1;
   const exitEff = G.sellQty > 0 ? (G.sellNotional / G.sellQty) / G.peak : 0;
   const harvest = G.cascQtyTotal > 0 ? Math.min(1, G.harvest / G.cascQtyTotal) : 0;
   const ctrl = U.maxHold / FLOAT_TRAD;
@@ -998,26 +1199,35 @@ if (HAS_DOM){
   const bookEl = $('book'), tapeEl = $('tape'), logsEl = $('logs'), topEl = $('topbar');
   let paused = true, speed = 1;
 
-  function ownColor(own){ return own === 'u' ? '#f59e0b' : own === 'wash' ? '#f59e0b' : own === 'ret' ? '#3b82f6' : own === 'arb' ? '#a855f7' : own === 'bot' ? '#14b8a6' : '#64748b'; }
+  function ownColor(own){ return own === 'u' ? '#f59e0b' : own === 'wash' ? '#f59e0b' : own === 'ret' ? '#3b82f6' : own === 'arb' ? '#a855f7' : own === 'bot' ? '#14b8a6' : own === 'team' ? '#ec4899' : '#64748b'; }
   function domOwn(lv){ let best = 'mm', bq = -1; const m = {}; for (const p of lv.parts){ m[p.own] = (m[p.own] || 0) + p.q; } for (const k in m) if (m[k] > bq){ bq = m[k]; best = k; } return best; }
 
+  // 增量写入：内容未变则不触碰 DOM，避免每帧强制重排（16ms 预算内最关键的一步）
+  const _lastHTML = new Map();
+  function setHTML(el, html){ if (_lastHTML.get(el) !== html){ el.innerHTML = html; _lastHTML.set(el, html); } }
+  function setText(el, txt){ if (_lastHTML.get(el) !== txt){ el.textContent = txt; _lastHTML.set(el, txt); } }
+
+  const OWN_LABEL = { u: '你', wash: '对敲', ret: '散', arb: '套', bot: 'bot', team: '项目', mm: 'MM', liq: '强平', stop: '止损' };
+  function bookRow(lv, cls, mx){
+    if (!lv) return '<div class="lv dim">······</div>';
+    const own = domOwn(lv);                 // 只算一次（原实现每行调 4 次）
+    const col = ownColor(own);
+    return '<div class="lv"><span class="num ' + cls + '" style="width:64px">' + fmtP(lv.p) + '</span>' +
+           '<span class="num" style="width:70px;text-align:right">' + fmtQ(lv.q) + '</span>' +
+           '<div class="bar" style="width:' + (lv.q / mx * 80) + '%;background:' + (cls === 'dn' ? 'rgba(34,197,94,.18)' : 'rgba(239,68,68,.18)') + '"></div>' +
+           '<span class="tag" style="background:' + col + '22;color:' + col + '">' + (OWN_LABEL[own] || 'MM') + '</span></div>';
+  }
   function drawBook(){
     const N = 11, asks = G.spot.asks.slice(0, N), bids = G.spot.bids.slice(0, N);
-    const mx = Math.max(1, ...asks.map(l => l.q), ...bids.map(l => l.q));
+    let mx = 1;
+    for (const l of asks) if (l.q > mx) mx = l.q;
+    for (const l of bids) if (l.q > mx) mx = l.q;
     let h = '';
-    for (let i = N - 1; i >= 0; i--){
-      const lv = asks[i];
-      if (lv) h += '<div class="lv"><span class="num dn" style="width:64px">' + fmtP(lv.p) + '</span><span class="num" style="width:70px;text-align:right">' + fmtQ(lv.q) + '</span><div class="bar" style="width:' + (lv.q / mx * 80) + '%;background:rgba(34,197,94,.18)"></div><span class="tag" style="background:' + ownColor(domOwn(lv)) + '22;color:' + ownColor(domOwn(lv)) + '">' + (domOwn(lv) === 'u' ? '你' : domOwn(lv) === 'ret' ? '散' : domOwn(lv) === 'arb' ? '套' : domOwn(lv) === 'bot' ? 'bot' : 'MM') + '</span></div>';
-      else h += '<div class="lv dim">······</div>';
-    }
+    for (let i = N - 1; i >= 0; i--) h += bookRow(asks[i], 'dn', mx);
     h += '<div class="mid num">≡ ' + fmtP(G.last) + ' ≡</div>';
-    for (let i = 0; i < N; i++){
-      const lv = bids[i];
-      if (lv) h += '<div class="lv"><span class="num up" style="width:64px">' + fmtP(lv.p) + '</span><span class="num" style="width:70px;text-align:right">' + fmtQ(lv.q) + '</span><div class="bar" style="width:' + (lv.q / mx * 80) + '%;background:rgba(239,68,68,.18)"></div><span class="tag" style="background:' + ownColor(domOwn(lv)) + '22;color:' + ownColor(domOwn(lv)) + '">' + (domOwn(lv) === 'u' ? '你' : domOwn(lv) === 'ret' ? '散' : domOwn(lv) === 'arb' ? '套' : domOwn(lv) === 'bot' ? 'bot' : 'MM') + '</span></div>';
-      else h += '<div class="lv dim">······</div>';
-    }
-    bookEl.innerHTML = h;
-    $('spreadInfo').textContent = (asks.length && bids.length) ? ('价差 ' + ((asks[0].p - bids[0].p) / G.last * 1e4).toFixed(1) + 'bp · 深度±2% ' + fmtQ(bookDepth(0.02)) + ' MOON') : '';
+    for (let i = 0; i < N; i++) h += bookRow(bids[i], 'up', mx);
+    setHTML(bookEl, h);
+    setText($('spreadInfo'), (asks.length && bids.length) ? ('价差 ' + ((asks[0].p - bids[0].p) / G.last * 1e4).toFixed(1) + 'bp · 深度±2% ' + fmtQ(bookDepth(0.02)) + ' MOON') : '');
   }
   function bookDepth(frac){
     let s = 0; const lo = G.last * (1 - frac), hi = G.last * (1 + frac);
@@ -1026,42 +1236,67 @@ if (HAS_DOM){
     return s;
   }
 
-  const TAGS = { u: ['🐋你', '#f59e0b'], wash: ['🎭对敲', '#f59e0b'], ret: ['🧑散户', '#3b82f6'], bot: ['🤖趋势', '#14b8a6'], arb: ['⚖️套利', '#a855f7'], liq: ['💥强平', '#ef4444'], stop: ['🛑止损', '#f97316'], mm: ['MM', '#64748b'] };
+  const TAGS = { u: ['🐋你', '#f59e0b'], wash: ['🎭对敲', '#f59e0b'], ret: ['🧑散户', '#3b82f6'], bot: ['🤖趋势', '#14b8a6'], arb: ['⚖️套利', '#a855f7'], team: ['🏢项目方', '#ec4899'], liq: ['💥强平', '#ef4444'], stop: ['🛑止损', '#f97316'], mm: ['MM', '#64748b'] };
   function drawTape(){
     let h = '';
     for (let i = 0; i < Math.min(22, TAPE.length); i++){
       const t = TAPE[i], tg = TAGS[t.tag] || TAGS.mm;
       h += '<div><span class="dim">' + fmtT(t.t).slice(3) + '</span> <span class="num ' + (t.side > 0 ? 'up' : 'dn') + '">' + fmtP(t.p) + '</span> <span class="num">' + fmtQ(t.q) + '</span> <span style="color:' + tg[1] + '">' + tg[0] + '</span></div>';
     }
-    tapeEl.innerHTML = h;
+    setHTML(tapeEl, h);
   }
   function drawLogs(){
     let h = '';
     for (let i = 0; i < Math.min(60, LOGS.length); i++){ const l = LOGS[i]; h += '<div><span class="dim">' + fmtT(l.t) + '</span> <span class="' + (LOGC[l.cls] || '') + '">' + l.msg + '</span></div>'; }
-    logsEl.innerHTML = h;
+    setHTML(logsEl, h);
   }
 
   function drawTop(){
-    const eq = userEquity(), roi = eq / 5e6 - 1;
+    const eq = userEquity(), roi = eq / baseEq() - 1;
     const ch4 = G.candles.length > 240 ? G.last / G.candles[G.candles.length - 240].o - 1 : 0;
     const ft = Math.floor(G.fundT / 3600) + ':' + ('0' + Math.floor(G.fundT % 3600 / 60)).slice(-2);
     const pos = U.pos ? ('<b class="' + (U.pos.side > 0 ? 'up' : 'dn') + '">' + (U.pos.side > 0 ? '多' : '空') + '</b> ' + fmtQ(U.pos.qty) + '@' + fmtP(U.pos.entry) + ' ' + U.pos.lev + 'x · uPnL <b class="' + (upnl() >= 0 ? 'up' : 'dn') + '">' + fmtU(upnl()) + '</b>') : '空仓';
-    topEl.innerHTML =
-      '<span class="chip">⏱ ' + fmtT(G.t) + '</span>' +
-      '<span class="chip">MOON <b class="num ' + (ch4 >= 0 ? 'up' : 'dn') + '">' + fmtP(G.last) + ' (' + (ch4 * 100).toFixed(1) + '%/4h)</b></span>' +
-      '<span class="chip dim">锚 ' + fmtP(G.idx) + ' · 永续 ' + fmtP(G.lastP) + '</span>' +
-      '<span class="chip">💰 ' + fmtU(U.cash) + ' U</span>' +
-      '<span class="chip">🪙 ' + fmtQ(U.q) + '@' + fmtP(U.costP) + '</span>' +
-      '<span class="chip">📊 ' + pos + '</span>' +
-      '<span class="chip">💵 权益 <b class="' + (roi >= 0 ? 'up' : 'dn') + '">' + fmtU(eq) + ' (' + (roi * 100).toFixed(1) + '%)</b></span>' +
-      '<span class="chip">🔥 热度 ' + (G.heat * 100).toFixed(0) + '%</span>' +
-      '<span class="chip">🌡 恐惧 ' + (G.fear * 100).toFixed(0) + '%</span>' +
-      '<span class="chip">🧯 风控 <span class="bar2"><i style="width:' + Math.min(100, G.sus) + '%;background:' + (G.sus > 60 ? '#ef4444' : G.sus > 30 ? '#f59e0b' : '#22c55e') + '"></i></span> ' + G.sus.toFixed(0) + '</span>' +
-      '<span class="chip">🐋 曝光 ' + (G.vis * 100).toFixed(0) + '%</span>' +
-      '<span class="chip">⏰ 费率 ' + (G.funding * 100).toFixed(3) + '% · ' + ft + '</span>';
+    // 渐进式披露：常显 4 项核心；次要指标收进「详情」浮层
+    const susCol = G.sus > 60 ? '#ef4444' : G.sus > 30 ? '#f59e0b' : '#22c55e';
+    setHTML(topEl,
+      '<span class="chip">MOON <b class="num ' + (ch4 >= 0 ? 'up' : 'dn') + '">' + fmtP(G.last) + '</b>' +
+        '<span class="dim" style="font-size:10px"> ' + (ch4 >= 0 ? '+' : '') + (ch4 * 100).toFixed(1) + '%/4h</span></span>' +
+      '<span class="chip">💵 <b class="' + (roi >= 0 ? 'up' : 'dn') + '">' + fmtU(eq) + '</b>' +
+        '<span class="dim" style="font-size:10px"> ' + (roi >= 0 ? '+' : '') + (roi * 100).toFixed(1) + '%</span></span>' +
+      '<span class="chip">🪙 ' + fmtQ(U.q) + '</span>' +
+      '<span class="chip">🔥 ' + (G.heat * 100).toFixed(0) + '%</span>' +
+      '<span class="chip dot" style="border-color:' + susCol + '44" title="风控暴露">' +
+        '<i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + susCol + '"></i></span>' +
+      '<details class="more"><summary>详情</summary><div class="morebox">' +
+        '<div><span class="k">时间</span><span class="v num">' + fmtT(G.t) + '</span></div>' +
+        '<div><span class="k">现金</span><span class="v num">' + fmtU(U.cash) + ' U</span></div>' +
+        '<div><span class="k">持仓成本</span><span class="v num">' + fmtP(U.costP) + '</span></div>' +
+        '<div><span class="k">合约</span><span class="v">' + pos + '</span></div>' +
+        '<div><span class="k">指数锚</span><span class="v num">' + fmtP(G.idx) + '</span></div>' +
+        '<div><span class="k">永续价</span><span class="v num">' + fmtP(G.lastP) + '</span></div>' +
+        '<div><span class="k">热度 / 恐惧</span><span class="v num">' + (G.heat * 100).toFixed(0) + '% / ' + (G.fear * 100).toFixed(0) + '%</span></div>' +
+        '<div><span class="k">风控暴露</span><span class="v num">' + G.sus.toFixed(0) + '</span></div>' +
+        '<div><span class="k">鲸鱼曝光</span><span class="v num">' + (G.vis * 100).toFixed(0) + '%</span></div>' +
+        '<div><span class="k">下次费率</span><span class="v num">' + (G.funding * 100).toFixed(3) + '% · ' + ft + '</span></div>' +
+        '<div style="border-top:1px solid #22304a;margin:3px 0"></div>' +
+        '<div><span class="k">🏢 项目方锁定</span><span class="v num">' + fmtQ(G.team.locked) + '</span></div>' +
+        '<div><span class="k">🏢 可售余额</span><span class="v num">' + fmtQ(G.team.liquid) + '</span></div>' +
+        '<div><span class="k">🏢 累计卖出</span><span class="v num">' + fmtQ(G.team.sold) + '</span></div>' +
+        '<div><span class="k">🏢 金库</span><span class="v num">' + fmtU(G.team.usdt) + ' U</span></div>' +
+      '</div></details>');
   }
 
-  function fit(cv){ const r = cv.getBoundingClientRect(); if (cv.width !== r.width | 0 || cv.height !== r.height | 0){ cv.width = r.width | 0; cv.height = r.height | 0; } const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); return c; }
+  // 缓存 canvas 逻辑尺寸，避免每帧触发布局回流（getBoundingClientRect 会强制 reflow）
+  const cvSize = new WeakMap();
+  function fit(cv){
+    const r = cv.getBoundingClientRect();
+    const w = Math.max(1, r.width | 0), h = Math.max(1, r.height | 0);
+    const prev = cvSize.get(cv);
+    if (!prev || prev.w !== w || prev.h !== h){ cv.width = w; cv.height = h; cvSize.set(cv, { w, h }); }
+    const c = cv.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    return c;
+  }
 
   function drawChart(){
     const cv = $('chart'), c = fit(cv), W = cv.width, H = cv.height;
@@ -1170,7 +1405,13 @@ if (HAS_DOM){
   }
 
   let frame = 0;
-  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); }
+  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); drawTeamStat(); }
+  function drawTeamStat(){
+    const el = $('teamStat'); if (!el) return;
+    if (ROLE.key !== 'team'){ setText(el, ''); return; }
+    const T = G.team;
+    setText(el, '锁定 ' + fmtQ(T.locked) + ' · 可售 ' + fmtQ(T.liquid) + ' · 已售 ' + fmtQ(T.sold) + ' · 金库 ' + fmtU(T.usdt) + 'U');
+  }
 
   function loop(){ if (paused) return; for (let i = 0; i < speed; i++) step(); if ((frame++ & 1) === 0) render(); }
 
@@ -1195,16 +1436,45 @@ if (HAS_DOM){
   direct('bShortP', () => { U.defLev = parseInt($('iLev').value); perpMarket(-1, qi('iQtyP')); });
   direct('bHalfP', () => { if (U.pos) perpMarket(-U.pos.side, U.pos.qty * 0.5); });
   direct('bCloseP', () => { if (U.pos) perpMarket(-U.pos.side, U.pos.qty); });
+  /* --- 项目方专属操作 --- */
+  direct('bUnlock', () => {
+    const T = G.team;
+    if (T.locked < 1e4){ log('🔓 已无可解锁代币', 'warn'); return; }
+    const amt = T.locked * 0.12;
+    T.locked -= amt; T.liquid += amt;
+    G.heat = clamp(G.heat + 0.05, 0.05, 3);
+    log('🔓 解锁 ' + fmtQ(amt) + ' MOON 进入可售（锁定余 ' + fmtQ(T.locked) + '）', 'warn');
+  });
+  direct('bDefend', () => {
+    const T = G.team;
+    const want = Math.min(qi('iTeamQty'), T.usdt * 0.25 / Math.max(G.last, 1e-9));
+    if (!(want > 1)){ log('💰 金库不足或数量为 0', 'warn'); return; }
+    const r = exec(G.spot, 1, want, 'team', 'team');
+    if (r.filled > 0){
+      T.usdt -= r.filled * r.vwap; T.bought += r.filled; T.liquid += r.filled;
+      log('🛡 护盘买入 ' + fmtQ(r.filled) + ' @' + fmtP(r.vwap) + '，均价冲击 ' + ((r.vwap / (G.last || 1) - 1) * 100).toFixed(2) + '%', 'good');
+    } else log('🛡 护盘失败：下方无卖盘', 'warn');
+  });
+  direct('bDistribute', () => {
+    const T = G.team;
+    const q = Math.min(qi('iTeamQty'), T.liquid);
+    if (!(q > 1)){ log('🪙 可售余额不足，先解锁', 'warn'); return; }
+    const p = roundP(Math.max(G.last * 1.006, G.fund * 1.15));
+    const ref = { onFill: (fq, fp) => { T.liquid -= fq; T.usdt += fq * fp; T.sold += fq; } };
+    addOrder(G.spot, -1, p, q, 'team', ref);
+    log('📤 挂出卖单 ' + fmtQ(q) + ' @' + fmtP(p) + '（等待接盘）', 'warn');
+  });
+
   direct('bStep', () => { step(); render(); });
   direct('bHop', () => { const n = 3600; for (let i = 0; i < n; i++) step(); render(); });
-  direct('bReset', () => { init(); paused = true; render(); });
   direct('bPause', () => { paused = true; });
   direct('bPlay', () => { paused = false; speed = 1; });
   direct('bFast', () => { paused = false; speed = 8; });
   direct('bSettle', () => {
     const r = grade();
-    $('modalBox').innerHTML = '<h2 style="margin:0 0 10px">🧾 操盘结果</h2>' +
+    $('modalBox').innerHTML = '<h2 style="margin:0 0 10px">🧾 ' + ROLE.icon + ' ' + ROLE.name + ' · 复盘</h2>' +
       '<table class="st">' +
+      '<tr><td>身份</td><td class="num">' + ROLE.icon + ' ' + ROLE.name + '（起始 ' + fmtU(baseEq()) + ' U）</td></tr>' +
       '<tr><td>最终权益</td><td class="num">' + fmtU(r.eq) + ' USDT</td></tr>' +
       '<tr><td>收益率</td><td class="num ' + (r.ret >= 0 ? 'up' : 'dn') + '">' + (r.ret * 100).toFixed(2) + '%</td></tr>' +
       '<tr><td>已实现盈亏</td><td class="num ' + (U.realized >= 0 ? 'up' : 'dn') + '">' + fmtU(U.realized) + '</td></tr>' +
@@ -1224,7 +1494,53 @@ if (HAS_DOM){
 
   window.addEventListener('error', e => { try { log('⚠️ 运行错误: ' + e.message, 'bad'); } catch (_) {} });
   window.addEventListener('resize', render);
-  init(); render();
+
+  /* ---- 角色选择与启动 ---- */
+  // 按角色裁剪可用功能：只暴露该角色真实能做的事（渐进式披露的角色维度）
+  function applyRoleUI(){
+    const show = (el, on) => { if (el) el.style.display = on ? '' : 'none'; };
+    const advs = document.querySelectorAll('details.adv');
+    // details.adv 顺序：[0]操盘工具 [1]限价挂单 [2]永续合约 [3]更多
+    const isWhale = ROLE.key === 'whale', isTeam = ROLE.key === 'team';
+    if (advs.length >= 4){
+      show(advs[0], isWhale);          // 对敲/幌骗：只有鲸鱼有动机和能力
+      show(advs[1], true);             // 限价挂单：所有角色都能用
+      show(advs[2], isWhale || isTeam);// 永续：散户通常不玩高杠杆合约
+      show(advs[3], true);             // 更多：始终保留
+    }
+    show($('bPump'), isWhale);
+    show($('bDump'), isWhale);
+    show($('teamPanel'), isTeam);
+    // 顶部说明随角色切换
+    const ir = $('introRole'), it = $('introText');
+    if (ir) ir.textContent = '你是' + ROLE.name;
+    if (it) it.innerHTML = ROLE.tag + (ROLE.hint ? '<br><span class="dim">' + ROLE.hint + '</span>' : '');
+    // 散户：按钮文案更贴近其处境
+    if (ROLE.key === 'retail'){
+      const b1 = $('bPct1'), b5 = $('bPct5');
+      if (b1) b1.textContent = '买10%';
+      if (b5) b5.textContent = '买25%';
+    }
+  }
+  function startGame(roleKey){
+    ROLE = ROLES[roleKey] || ROLES.whale;
+    $('picker').classList.add('hide');
+    init();
+    paused = false; speed = 1;
+    applyRoleUI();
+    log('🎬 你选择了「' + ROLE.name + '」· ' + ROLE.tag, 'god');
+    render();
+  }
+  document.querySelectorAll('.pk-card').forEach(btn => {
+    btn.addEventListener('click', () => startGame(btn.getAttribute('data-role')));
+  });
+  // 重置 = 回到角色选择
+  $('bReset').addEventListener('click', () => { paused = true; $('picker').classList.remove('hide'); });
+
+  init();                 // 先建好市场，让选择弹窗背后有真实行情在动
+  paused = false; speed = 1;
+  applyRoleUI();
+  render();
   setInterval(loop, 33);
 }
 </script>
