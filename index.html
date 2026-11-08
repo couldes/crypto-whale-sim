@@ -2035,6 +2035,22 @@ if (HAS_DOM){
   // 重置 = 回到角色选择
   $('bReset').addEventListener('click', () => { paused = true; $('picker').classList.remove('hide'); });
 
+  // ?debug=1 显示布局探针（便于在无法开浏览器时核对真实尺寸）
+  if (/(^|[?&])debug=1/.test(location.search)){
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:0;bottom:0;z-index:9999;background:#003300;color:#0f0;' +
+      'font:11px/1.5 monospace;padding:5px 7px;white-space:pre;pointer-events:none';
+    document.body.appendChild(d);
+    const m = el => { const n = document.querySelector(el); return n ? (n.offsetTop + '/' + n.offsetHeight) : '-'; };
+    const upd = () => { d.textContent =
+      'win ' + innerWidth + 'x' + innerHeight + '  docH ' + document.documentElement.scrollHeight +
+      '\nlayout h=' + $('layout').offsetHeight +
+      '\nmid   ' + m('.mid') + '   pair ' + m('#pairhead') + '   tab ' + m('.tabrow') +
+      '\ncpane ' + m('[data-cpane="chart"]') + '   cbox ' + m('.chartbox') +
+      '\ntradePanel ' + m('#tradePanel') + '  btns ' + m('.tf-btns') +
+      '\nsideR ' + m('.side-r') + '  bookH ' + m('#book') + '  tapeH ' + m('#tape'); };
+    upd(); setInterval(upd, 400);
+  }
   init();                 // 先建好市场，让选择弹窗背后有真实行情在动
   paused = false; speed = 1;
   // 深链：?role=whale|team|retail 直接进入，便于分享与截图
