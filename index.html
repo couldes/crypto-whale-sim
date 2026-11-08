@@ -53,6 +53,17 @@ table.st td{padding:1px 4px;border-bottom:1px solid #1a2230}
 #modal .box{background:var(--pn);border:1px solid #2a3550;border-radius:10px;padding:18px;max-width:520px;width:92%}
 canvas.small{width:100%;height:110px;display:block;background:#0d1119;border-radius:6px}
 .tag{font-size:10px;padding:0 4px;border-radius:3px;background:#1e293b;color:#94a3b8;margin-left:4px}
+/* ---- 我的挂单 ---- */
+.ordhead{display:flex;align-items:center;justify-content:space-between;margin:6px 0 3px;font-size:10.5px;color:#5b6b80}
+.ordempty{font-size:10.5px;color:#3f4d61;padding:3px 0}
+.ordrow{display:grid;grid-template-columns:22px 1fr auto 18px;gap:6px;align-items:center;font-size:10.5px;padding:2px 3px;border-radius:4px}
+.ordrow:hover{background:#182130}
+.ordside{font-size:10px;font-weight:600}
+.ordside.up{color:#ef4444}.ordside.dn{color:#22c55e}
+.ordp{color:#cbd5e1}.ordq{color:#64748b;text-align:right}
+.ordx{background:none;border:none;color:#475569;cursor:pointer;font-size:11px;padding:0;line-height:1}
+.ordx:hover{color:#ef4444}
+
 /* ---- 角色选择 ---- */
 #picker{position:fixed;inset:0;background:rgba(6,9,14,.94);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow:auto}
 #picker.hide{display:none}
@@ -175,6 +186,11 @@ h3:first-child{margin-top:2px}
           <button class="btn sell sm" id="bLmtS">限价卖</button>
         </div>
         <p class="note">价格填 0 = 当前价±1%</p>
+        <div class="ordhead">
+          <span>我的挂单 <b id="ordCount">0</b></span>
+          <button class="btn sm" id="bCancelAll2">全撤</button>
+        </div>
+        <div id="ordList"></div>
       </details>
 
       <details class="adv">
@@ -447,7 +463,9 @@ function exec(bk, side, qty, takerOwn, tag){
     // 这里用盘口近端深度做归一化，Y≈0.35，并设单笔硬上限保证数值稳定
     // 平方根冲击律（Tóth et al. 2011, PRX；Maitrier-Loeper-Bouchaud 2025 校准 Y≈0.5）：
     //   ΔlnP = Y · σ_daily · sqrt(Q / V_daily)，δ=0.5
-    const Vd = Math.max(3.0e5, G.volEma * 1440);          // 日成交额（volEma 为每分钟口径）
+    // volEma 是「每 tick(1s)」成交额口径 → 日成交额 = volEma × 86400
+    // 之前误写成 ×1440（按分钟口径），导致 Vd 被低估 60 倍、冲击被放大 ~8 倍
+    const Vd = Math.max(3.0e5, G.volEma * 86400);
     const sigDaily = Math.sqrt(Math.max(1e-12, G.sig2 * 86400));  // 日波动
     // 部分缩放：完全按 σ 缩放会形成 冲击→波动→更大冲击 的自激发散
     const volRef = 0.17;  // 参考日波动 17%
@@ -1337,10 +1355,36 @@ if (HAS_DOM){
     c.strokeStyle = 'rgba(245,158,11,.7)'; c.beginPath();
     for (let i = 19; i < cs.length; i++){ let s = 0; for (let j = i - 19; j <= i; j++) s += cs[j].c; const y = Y(s / 20); const x = X(i); i === 19 ? c.moveTo(x, y) : c.lineTo(x, y); }
     c.stroke();
-    // 用户成交标记
-    const t0 = (G.t - cs.length * CANDLE);
+    // 用户成交标记：不画在K线上（会遮挡），改为沿K线底部的一条细标记带
+    // 买=琥珀色小块，卖=紫色小块；同K线内合并，只显示存在与否 + 方向
+    const markerBandY = H - padB - volH - 3;   // 成交量区上沿之上
     c.textAlign = 'center';
-    for (const m of G.marks){ if (m.bk !== 's') continue; const ci = Math.floor(m.t / CANDLE); const idx = ci - (Math.ceil(G.t / CANDLE) - cs.length); if (idx >= 0 && idx < cs.length){ const x = X(idx), y = Y(m.p); c.fillStyle = m.side > 0 ? '#f59e0b' : '#8b5cf6'; c.beginPath(); if (m.side > 0){ c.moveTo(x, y - 6); c.lineTo(x - 4, y + 2); c.lineTo(x + 4, y + 2); } else { c.moveTo(x, y + 6); c.lineTo(x - 4, y - 2); c.lineTo(x + 4, y - 2); } c.closePath(); c.fill(); } }
+    const baseIdx = Math.ceil(G.t / CANDLE) - cs.length;
+    for (const m of G.marks){
+      if (m.bk !== 's') continue;
+      const idx = Math.floor(m.t / CANDLE) - baseIdx;
+      if (idx < 0 || idx >= cs.length) continue;
+      const x = X(idx);
+      c.fillStyle = m.side > 0 ? 'rgba(245,158,11,.75)' : 'rgba(139,92,246,.75)';
+      // 2px 宽的竖短线，贴在K线下方，完全不遮挡价格
+      c.fillRect(x - 1, markerBandY - 4, 2, 4);
+    }
+    // 我的挂单价格线（细虚线 + 右侧小标签，帮助判断挂得远不远）
+    if (U.orders && U.orders.length){
+      const seen = new Set();
+      for (const o of U.orders){
+        const key = o.side + ':' + o.p;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const y = Y(o.p);
+        if (y < top - 2 || y > top + ph + 2) continue;
+        c.strokeStyle = o.side > 0 ? 'rgba(245,158,11,.45)' : 'rgba(139,92,246,.45)';
+        c.setLineDash([1, 4]); c.beginPath(); c.moveTo(0, y); c.lineTo(W - padR, y); c.stroke(); c.setLineDash([]);
+        c.fillStyle = o.side > 0 ? 'rgba(245,158,11,.85)' : 'rgba(139,92,246,.85)';
+        c.font = '9px Consolas'; c.textAlign = 'right';
+        c.fillText((o.side > 0 ? '买' : '卖') + fmtP(o.p), W - padR - 3, y - 2);
+      }
+    }
     // 现价
     c.strokeStyle = '#f59e0b'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(0, Y(G.last)); c.lineTo(W - padR, Y(G.last)); c.stroke(); c.setLineDash([]);
     c.fillStyle = '#f59e0b'; c.fillRect(W - padR + 2, Y(G.last) - 8, padR - 4, 16);
@@ -1405,7 +1449,26 @@ if (HAS_DOM){
   }
 
   let frame = 0;
-  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); drawTeamStat(); }
+  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); drawTeamStat(); drawOrders(); }
+  function drawOrders(){
+    const el = $('ordList'); if (!el) return;
+    const os = U.orders || [];
+    setText($('ordCount'), String(os.length));
+    if (!os.length){ setHTML(el, '<div class="ordempty">暂无挂单</div>'); return; }
+    // 按价格排序：卖单从低到高，买单从高到低（贴近成交的排前面）
+    const sorted = os.slice().sort((a, b) => a.side === b.side ? (a.side < 0 ? a.p - b.p : b.p - a.p) : (a.side < 0 ? -1 : 1));
+    let h = '';
+    for (const o of sorted){
+      const isBuy = o.side > 0;
+      h += '<div class="ordrow" data-oid="' + o.id + '">' +
+           '<span class="ordside ' + (isBuy ? 'up' : 'dn') + '">' + (isBuy ? '买' : '卖') + '</span>' +
+           '<span class="num ordp">' + fmtP(o.p) + '</span>' +
+           '<span class="num ordq">' + fmtQ(o.remain) + '</span>' +
+           '<button class="ordx" data-cancel="' + o.id + '" title="撤销这笔">✕</button>' +
+           '</div>';
+    }
+    setHTML(el, h);
+  }
   function drawTeamStat(){
     const el = $('teamStat'); if (!el) return;
     if (ROLE.key !== 'team'){ setText(el, ''); return; }
@@ -1430,6 +1493,19 @@ if (HAS_DOM){
   direct('bSpoofB', () => spoofWall(1, qi('iSpoofQ')));
   direct('bSpoofS', () => spoofWall(-1, qi('iSpoofQ')));
   direct('bCancelAll', () => { const n = U.orders.length; for (const o of U.orders.slice()) cancelOrder(o); log('已撤销 ' + n + ' 笔挂单'); });
+
+  // 挂单列表：事件委托撤单（挂单频繁重建，不能用逐个绑定）
+  const ordListEl = $('ordList');
+  if (ordListEl) ordListEl.addEventListener('click', e => {
+    const t = e.target;
+    const btn = (t && typeof t.closest === 'function') ? t.closest('[data-cancel]') : null;
+    if (!btn) return;
+    const id = parseInt(btn.getAttribute('data-cancel'));
+    const o = U.orders.find(x => x.id === id);
+    if (o){ cancelOrder(o); log('✕ 撤销' + (o.side > 0 ? '买单' : '卖单') + ' ' + fmtQ(o.remain) + ' @' + fmtP(o.p)); }
+    render();
+  });
+  direct('bCancelAll2', () => { const n = U.orders.length; for (const o of U.orders.slice()) cancelOrder(o); log('已撤销 ' + n + ' 笔挂单'); });
   direct('bPump', () => { let q = 0; for (const lv of G.spot.asks.slice(0, 5)) q += lv.q; uMarketSpot(1, q * 1.05); });
   direct('bDump', () => { let q = 0; for (const lv of G.spot.bids.slice(0, 5)) q += lv.q; uMarketSpot(-1, q * 1.05); });
   direct('bLongP', () => { U.defLev = parseInt($('iLev').value); perpMarket(1, qi('iQtyP')); });
