@@ -242,6 +242,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
 .bar2 i{display:block;height:100%}
 .tag{font-size:9px;padding:0 3px;border-radius:2px;background:#1f1f1f;color:var(--dim2)}
 
+#dim{display:none}
 .mswitch{display:none}
 .sheethead{display:none}
 #mbar{display:none}
@@ -327,7 +328,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
     box-shadow:0 -12px 44px rgba(0,0,0,.85);padding-bottom:calc(14px + env(safe-area-inset-bottom))}
   body.sheet #tradePanel{transform:translateY(0)}
   body.sheet{overflow:hidden}
-  body.sheet::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:55}
+  body.sheet #dim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55}
   .sheethead{display:flex;align-items:center;justify-content:space-between;
     padding:15px 16px 4px;font-size:13.5px;color:#f0f0f0;font-weight:500}
   .sheethead::before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);
@@ -491,6 +492,8 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
     </div>
   </aside>
 </main>
+
+<div id="dim"></div>
 
 <div id="mbar">
   <button class="buy" data-mact="1">买入</button>
