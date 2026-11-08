@@ -1721,8 +1721,11 @@ if (HAS_DOM){
     const ticks = Math.min(6, cs.length);
     for (let i = 0; i < ticks; i++){
       const idx = Math.round(i * (cs.length - 1) / Math.max(1, ticks - 1));
-      c.fillText(fmtT(cs[idx].t).slice(3), X(idx), H - padB + 4);
+      const tx0 = X(idx);
+      c.textAlign = tx0 < 34 ? 'left' : (tx0 > W - padR - 34 ? 'right' : 'center');
+      c.fillText(fmtT(cs[idx].t).slice(3), tx0, H - padB + 4);
     }
+    c.textAlign = 'left';
 
     c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = '10.5px Inter,Consolas,monospace';
     c.fillStyle = '#5c5c5c'; c.fillText('VOL', 6, top + ph + 8);
