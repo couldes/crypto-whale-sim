@@ -309,6 +309,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
     padding:9px 0;border-radius:4px;font-family:inherit}
   .mswitch button.on{color:#fff;border-color:var(--bd3);background:#1a1a1a;font-weight:500}
   .lv{padding:2.5px 12px;font-size:12.5px;line-height:1.6}
+  .lv .bar{opacity:.32}
   .obhead{padding:3px 12px 5px}
   .obmid{padding:7px 0;font-size:14px}
 
@@ -1607,7 +1608,9 @@ if (HAS_DOM){
     const c = fit(cv), W = cv.width, H = cv.height;
     c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
     const all = aggCandles(TF);
-    const cs = all.slice(-Math.max(48, Math.round(190 / Math.sqrt(TF))));
+    // 窄屏少画几根，保证每根有足够像素（OKX 手机版同样做法）
+    const want = clamp(Math.round(W / 5.2) / Math.sqrt(TF), 48, 190);
+    const cs = all.slice(-Math.round(want));
     if (!cs.length) return;
 
     const padR = 64, padB = 20, volH = 56, top = 30;
@@ -1631,19 +1634,23 @@ if (HAS_DOM){
     const chg = last.o ? last.c / last.o - 1 : 0;
     const rng = last.l ? (last.h - last.l) / last.l : 0;
     let tx = 6, ty = 11;
+    const limitX = W - padR - 4;
     const seg = (label, val, col) => {
+      const wd = c.measureText(label).width + 2 + c.measureText(val).width + 11;
+      if (tx + wd > limitX) return;               // 放不下就省略，绝不溢出到价格轴
       c.fillStyle = '#5c5c5c'; c.fillText(label, tx, ty); tx += c.measureText(label).width + 2;
       c.fillStyle = col || '#c8c8c8'; c.fillText(val, tx, ty); tx += c.measureText(val).width + 11;
     };
-    seg('时间', fmtT(last.t));
+    if (W > 520) seg('时间', fmtT(last.t));
     seg('开', fmtP(last.o)); seg('高', fmtP(last.h)); seg('低', fmtP(last.l)); seg('收', fmtP(last.c));
     seg('涨跌', (chg >= 0 ? '+' : '') + (chg * 100).toFixed(2) + '%', chg >= 0 ? '#25a750' : '#ca3f64');
-    seg('振幅', (rng * 100).toFixed(2) + '%');
+    if (W > 600) seg('振幅', (rng * 100).toFixed(2) + '%');
     tx = 6; ty = 25;
     const maLg = (n, col) => {
       if (cs.length < n) return;
       let sum = 0; for (let j = cs.length - n; j < cs.length; j++) sum += cs[j].c;
       const t = 'MA(' + n + ') ' + fmtP(sum / n);
+      if (tx + c.measureText(t).width > limitX) return;
       c.fillStyle = col; c.fillText(t, tx, ty); tx += c.measureText(t).width + 14;
     };
     maLg(5, '#27c6da'); maLg(10, '#ffa726'); maLg(20, '#ca3f64');
