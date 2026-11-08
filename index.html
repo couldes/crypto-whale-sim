@@ -75,16 +75,16 @@ details.more .v{color:#d7dce3;text-align:right}
 .lg.up{background:var(--up)}.lg.dn{background:var(--dn)}.lg.anchor{background:#848e9c;margin-left:8px}
 
 /* ---------- 订单簿 ---------- */
-.obhead{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:4px 10px;font-size:10px;color:var(--dim2);border-bottom:1px solid #151b23}
+.obhead{display:grid;grid-template-columns:1fr 1fr 1fr 20px;gap:6px;padding:4px 10px;font-size:10px;color:var(--dim2);border-bottom:1px solid #151b23}
 .obhead span:nth-child(2),.obhead span:nth-child(3){text-align:right}
 #book{padding:2px 0;flex:1;overflow:hidden}
-.lv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:center;position:relative;
+.lv{display:grid;grid-template-columns:1fr 1fr 1fr 20px;gap:6px;align-items:center;position:relative;
   padding:1px 10px;font-size:11px;line-height:1.5}
 .lv .bar{position:absolute;right:0;top:0;bottom:0;z-index:0}
 .lv span{position:relative;z-index:1}
 .lv .nm{text-align:right}
 .lv.dim{display:block;text-align:center;color:#2f3844;font-size:10px;padding:1px 0}
-.lv .tag{position:absolute;right:4px;font-size:9px;padding:0 3px;border-radius:2px;opacity:.85;z-index:2}
+.lv .tg{font-size:9px;text-align:right;opacity:.85;position:relative;z-index:1}
 .obmid{text-align:center;padding:4px 0;font-size:12px;color:#dfe4ea;border-top:1px solid #151b23;border-bottom:1px solid #151b23;background:#101519}
 
 /* ---------- 成交明细 ---------- */
@@ -207,41 +207,151 @@ table.st td:last-child{text-align:right;color:#dfe4ea}
 .bar2 i{display:block;height:100%}
 .tag{font-size:9px;padding:0 3px;border-radius:2px;background:#1e252e;color:var(--dim)}
 
-/* ---------- 响应式 ---------- */
+.mswitch{display:none}
+.sheethead{display:none}
+#mbar{display:none}
+
+/* ---------- 平板 ---------- */
 @media (max-width:1240px){
-  #layout{grid-template-columns:240px minmax(0,1fr) 280px}
+  #layout{grid-template-columns:240px minmax(0,1fr) 288px}
 }
 @media (max-width:1080px){
-  #layout{grid-template-columns:230px minmax(0,1fr);grid-template-rows:auto auto}
-  .side-r{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
-  .side-r>.panel{flex:1;min-width:280px}
+  #layout{grid-template-columns:230px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .side-r{grid-column:1/-1;grid-row:2;flex-direction:row;flex-wrap:wrap;overflow:visible}
+  .side-r>.panel{flex:1;min-width:300px}
 }
+
+/* ================= 手机版（OKX App 交互） ================= */
 @media (max-width:760px){
-  #layout{grid-template-columns:1fr;padding:5px;gap:5px}
-  .side-l{order:2}.mid{order:1}.side-r{order:3;flex-direction:column}
-  #chart{height:250px}
-  .btn{padding:7px 11px;font-size:12.5px}
-  .btn.big{padding:11px 0;font-size:14px}
-  .pctrow button{padding:7px 0;font-size:11.5px}
-  #topbar{height:auto;flex-wrap:wrap;padding:6px 10px;gap:8px}
-  .pk-grid{grid-template-columns:1fr}
-  .stat{display:none}
+  html,body{font-size:12.5px;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  #app{height:auto;min-height:100vh}
+
+  /* 顶栏吸顶 */
+  #topbar{position:sticky;top:0;z-index:20;height:auto;flex-wrap:wrap;gap:6px 8px;padding:8px 10px;
+    background:rgba(11,14,17,.97);backdrop-filter:blur(10px)}
+  #topbar .stat{display:none}
+  #topbar .pair{border-right:none;padding-right:2px;gap:5px}
+  #topbar .pair b{font-size:14.5px}
+  #topbar .last{font-size:17.5px}
+  #topbar .chg{font-size:11.5px}
+  details.more>summary{padding:5px 10px;font-size:11.5px}
+  details.more .morebox{right:-6px;min-width:230px;max-height:70vh;overflow:auto}
+
+  /* 单列流式：用 display:contents 把面板提升为 #layout 的直接子项，按 order 排列 */
+  #layout{display:flex;flex-direction:column;gap:4px;padding:4px 4px 72px;overflow:visible;min-height:0}
+  .col{display:contents}
+  .panel,.panel.grow{flex:none;border-radius:5px}
+
+  .chartwrap{order:1}
+  #chart{height:290px}
+
+  /* 盘口 / 成交 切换 */
+  .mswitch{order:2;display:grid;grid-template-columns:1fr 1fr;gap:4px;background:none;border:none;padding:0;margin:0}
+  .mswitch button{background:var(--pn);border:1px solid var(--bd);color:var(--dim);font-size:12.5px;
+    padding:9px 0;border-radius:5px;font-family:inherit}
+  .mswitch button.on{color:#fff;border-color:var(--bd2);background:#1a212a;font-weight:600}
+  [data-mp]{order:3}
+  body[data-msw="book"] [data-mp="tape"]{display:none}
+  body[data-msw="tape"] [data-mp="book"]{display:none}
+  #book{max-height:none;overflow:visible}
+  #tape{max-height:62vh}
+  .lv{padding:2px 10px;font-size:11.5px;line-height:1.65}
+  .obhead{padding:5px 10px;font-size:10.5px}
+  .obmid{padding:6px 0;font-size:13px;font-weight:600}
+
+  /* 底部 Tab 面板 */
+  .mid>.panel.grow{order:5;max-height:56vh}
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:11px 13px;font-size:12.5px;white-space:nowrap}
+  .pane{padding:8px 10px}
+  #logs>div{padding:5px 0;font-size:11.5px;line-height:1.6}
+  canvas.small{height:118px}
+
+  /* 工具折叠区 */
+  .side-r .tools{order:6;margin-bottom:4px}
+  details.adv>summary{padding:13px 12px;font-size:13px}
+  .row{margin:7px 10px;gap:6px}
+  .row input,.row select{flex:1;min-width:0;width:auto;padding:9px 9px;font-size:13px}
+  .row .dim{font-size:11.5px}
+  p.note{font-size:10.5px;margin:7px 10px 10px}
+
+  /* 通用触摸友好 */
+  .btn{padding:10px 12px;font-size:13px}
+  .btn.sm{padding:8px 11px;font-size:12.5px}
+  .fld>span{font-size:11.5px}
+  .inp input{font-size:15px;padding:11px 0}
+  .inp{padding:0 10px}
+  .pctrow button{padding:10px 0;font-size:12px}
+  .avail{font-size:11.5px;margin:10px 12px 0}
+  .fld,.seg,.btn.big{margin-left:12px;margin-right:12px}
+  .btn.big{width:calc(100% - 24px);padding:13px 0;font-size:15px;border-radius:5px;margin-top:12px}
+
+  /* 交易面板 → 底部弹出层 */
+  #tradePanel{position:fixed;left:0;right:0;bottom:0;z-index:60;border-radius:15px 15px 0 0;
+    max-height:88vh;overflow-y:auto;transform:translateY(103%);
+    transition:transform .26s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 -10px 40px rgba(0,0,0,.72);padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  body.sheet #tradePanel{transform:translateY(0)}
+  body.sheet{overflow:hidden}
+  /* 层级：底部栏 45 < 遮罩 55 < 下单层 60 < 结算弹窗 70 < 角色选择 80 */
+  #modal{z-index:70}
+  #picker{z-index:80}
+  body.sheet::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:55}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 14px 6px;font-size:13.5px;color:#e6ebf2;font-weight:500}
+  .sheethead::before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:2px;background:#333e4c}
+  .sheetx{background:none;border:none;color:var(--dim);font-size:17px;cursor:pointer;font-family:inherit;padding:0 2px;line-height:1}
+
+  /* 底部固定买卖栏 */
+  #mbar{display:grid;grid-template-columns:1fr 1fr;gap:9px;position:fixed;left:0;right:0;bottom:0;z-index:45;
+    padding:9px 11px calc(9px + env(safe-area-inset-bottom));
+    background:rgba(11,14,17,.96);backdrop-filter:blur(10px);border-top:1px solid var(--bd)}
+  #mbar button{border:none;border-radius:6px;padding:13px 0;font-size:15.5px;font-weight:600;font-family:inherit}
+  #mbar button.buy{background:var(--up);color:#06120d}
+  #mbar button.sell{background:var(--dn);color:#fff}
+  #mbar button:active{filter:brightness(.9)}
+
+  /* 弹窗 / 角色选择 */
+  #modal .box{width:96%;padding:14px;border-radius:8px}
+  #modal h2{font-size:14px}
+  table.st{font-size:11.5px}
+  table.st td{padding:7px 5px}
+  .pk{padding:4px 0}
+  .pk h2{font-size:17px}
+  .pk-sub{font-size:11.5px;margin-bottom:12px}
+  .pk-grid{grid-template-columns:1fr;gap:8px}
+  .pk-card{padding:13px 12px;gap:5px}
+  .pk-ic{font-size:21px}
+  .pk-desc{font-size:11px;line-height:1.55}
+  #picker{padding:12px;align-items:flex-start}
+  .pk-grid{margin-top:2px}
+}
+@media (max-width:400px){
+  #chart{height:245px}
+  #topbar .stat{display:none}
+  .tab{padding:10px 10px;font-size:12px}
 }
 </style>
 </head>
-<body>
+<body data-msw="book">
 <div id="app">
 <header id="topbar"></header>
 
 <main id="layout">
   <!-- ============ 左：盘口 + 成交 ============ -->
   <section class="col side-l">
-    <div class="panel">
+    <div class="mswitch" id="mswitch">
+      <button data-msw="book" class="on">盘口</button>
+      <button data-msw="tape">成交明细</button>
+    </div>
+    <div class="panel" data-mp="book">
       <div class="ph"><span>现货盘口</span><span id="spreadInfo" class="ph-sub"></span></div>
-      <div class="obhead"><span>价格(USDT)</span><span>数量(MOON)</span><span>累计</span></div>
+      <div class="obhead"><span>价格(USDT)</span><span>数量(MOON)</span><span>累计</span><span></span></div>
       <div id="book"></div>
     </div>
-    <div class="panel grow">
+    <div class="panel grow" data-mp="tape">
       <div class="ph"><span>成交明细</span></div>
       <div id="tape" class="scroll"></div>
     </div>
@@ -278,7 +388,8 @@ table.st td:last-child{text-align:right;color:#dfe4ea}
 
   <!-- ============ 右：交易面板 ============ -->
   <section class="col side-r">
-    <div class="panel">
+    <div class="panel" id="tradePanel">
+      <div class="sheethead"><span>交易 MOON/USDT</span><button class="sheetx" id="mClose" aria-label="关闭">✕</button></div>
       <div class="seg sideseg">
         <button class="on buy" data-side="1">买入</button>
         <button class="sell" data-side="-1">卖出</button>
@@ -358,6 +469,10 @@ table.st td:last-child{text-align:right;color:#dfe4ea}
     </div>
   </section>
 </main>
+<div id="mbar">
+  <button class="buy" data-mact="1">买入</button>
+  <button class="sell" data-mact="-1">卖出</button>
+</div>
 </div>
 <div id="modal"><div class="box" id="modalBox"></div></div>
 <div id="picker"><div class="pk">
@@ -1339,8 +1454,8 @@ if (HAS_DOM){
     return '<div class="lv"><span class="num ' + cls + '">' + fmtP(lv.p) + '</span>' +
            '<span class="num nm">' + fmtQ(lv.q) + '</span>' +
            '<span class="num nm dim">' + fmtQ(cum) + '</span>' +
-           '<div class="bar" style="width:' + w + '%;background:' + barCol + '"></div>' +
-           (lbl ? '<span class="tag" style="color:' + col + '">' + lbl + '</span>' : '') + '</div>';
+           '<span class="tg" style="color:' + col + '">' + (lbl || '') + '</span>' +
+           '<div class="bar" style="width:' + w + '%;background:' + barCol + '"></div></div>';
   }
   function drawBook(){
     const N = 11, asks = G.spot.asks.slice(0, N), bids = G.spot.bids.slice(0, N);
@@ -1707,6 +1822,42 @@ if (HAS_DOM){
       render();
     });
   });
+
+  /* ============ 手机端交互：盘口/成交切换 · 底部买卖栏 · 弹出式下单 ============ */
+  const isMobile = () => (typeof window !== 'undefined' && window.innerWidth <= 760);
+
+  // 盘口 / 成交明细 切换
+  const mswBtns = document.querySelectorAll('#mswitch button');
+  mswBtns.forEach(b => {
+    b.addEventListener('click', () => {
+      document.body.setAttribute('data-msw', b.getAttribute('data-msw'));
+      mswBtns.forEach(x => x.classList.toggle('on', x === b));
+      render();
+    });
+  });
+
+  function openSheet(side){
+    tradeSide = side;
+    if (tradeType === 'limit'){ const p = $('iLmtP'); if (p) p.value = ''; }
+    syncTradeUI();
+    document.body.classList.add('sheet');
+  }
+  document.querySelectorAll('#mbar button').forEach(b => {
+    b.addEventListener('click', () => openSheet(parseInt(b.getAttribute('data-mact'))));
+  });
+  direct('mClose', () => { document.body.classList.remove('sheet'); });
+
+  // 点空白处收起下单面板
+  document.addEventListener('click', e => {
+    if (!document.body.classList.contains('sheet') || !isMobile()) return;
+    const tp = $('tradePanel'), t = e.target;
+    if (tp && tp.contains && tp.contains(t)) return;
+    if (t && t.closest && t.closest('#mbar')) return;
+    document.body.classList.remove('sheet');
+  }, true);
+
+  // 从手机切回桌面时清掉弹层状态
+  window.addEventListener('resize', () => { if (!isMobile()) document.body.classList.remove('sheet'); });
   direct('bPump', () => { let q = 0; for (const lv of G.spot.asks.slice(0, 5)) q += lv.q; uMarketSpot(1, q * 1.05); });
   direct('bDump', () => { let q = 0; for (const lv of G.spot.bids.slice(0, 5)) q += lv.q; uMarketSpot(-1, q * 1.05); });
   direct('bLongP', () => { U.defLev = parseInt($('iLev').value); perpMarket(1, qi('iQtyP')); });
