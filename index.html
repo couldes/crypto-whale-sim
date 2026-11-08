@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MOON 做庄模拟器 · 币圈市场微观结构沙盘</title>
+<meta name="description" content="扮演加密货币庄家：吸筹、对敲、幌骗、拉盘、派发。逐档订单簿+900个行为智能体实时博弈，平方根冲击律与真实波动聚集。仅用于教学与研究，理解操纵机制与风控识别。">
+<meta name="theme-color" content="#0b0e14">
+<meta property="og:title" content="MOON 做庄模拟器 · 币圈市场微观结构沙盘">
+<meta property="og:description" content="你是庄家：吸筹 → 对敲刷量 → 幌骗造势 → 拉盘引发 FOMO → 高位派发。真实订单簿撮合 + 900 个行为智能体。教育与研究用途。">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%8B%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#0b0e14;--pn:#121722;--bd:#1e2635;--fg:#cbd5e1;--dim:#64748b;--up:#ef4444;--dn:#22c55e;--ac:#f59e0b;--mm:#64748b;--ret:#3b82f6;--arb:#a855f7;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:12px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+.num{font-variant-numeric:tabular-nums;font-family:Consolas,Menlo,monospace}
+#topbar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--bd);background:#0e131d}
+.chip{background:#161d2b;border:1px solid var(--bd);padding:2px 8px;border-radius:6px;white-space:nowrap}
+.chip b{color:#fff;font-weight:600}
+.up{color:var(--up)}.dn{color:var(--dn)}.dim{color:var(--dim)}.ac{color:var(--ac)}
+#layout{display:grid;grid-template-columns:295px 1fr 330px;gap:8px;padding:8px;height:calc(100vh - 44px)}
+.p{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:8px;overflow:auto;min-height:0}
+.col{display:flex;flex-direction:column;gap:8px;min-height:0}
+.p h3{margin:2px 0 6px;font-size:12px;color:#94a3b8;letter-spacing:.5px}
+.row{display:flex;gap:4px;align-items:center;margin:3px 0;flex-wrap:wrap}
+.row input,.row select{background:#0d1420;border:1px solid #263148;color:#e2e8f0;border-radius:5px;padding:3px 6px;width:86px}
+.row input.wide{width:120px}
+.btn{background:#1c2433;border:1px solid #2a3550;color:#cbd5e1;padding:3px 8px;border-radius:6px;cursor:pointer;font-size:12px}
+.btn:hover{background:#263149}
+.btn.buy{background:#7f1d1d;border-color:#b91c1c;color:#fecaca}
+.btn.sell{background:#14532d;border-color:#16a34a;color:#bbf7d0}
+.btn.warn{background:#78350f;border-color:#b45309;color:#fde68a}
+.btn.sm{padding:1px 6px;font-size:11px}
+details{margin-bottom:6px}
+summary{cursor:pointer;color:#94a3b8;font-size:11px}
+details p{margin:4px 0;color:#94a3b8;font-size:11px}
+#chart{width:100%;height:400px;display:block;background:#0d1119;border-radius:6px}
+#logs{height:150px;overflow-y:auto;font-size:11px}
+#logs div{padding:1px 0;border-bottom:1px dashed #1a2230}
+#book .lv{display:flex;align-items:center;gap:6px;position:relative;padding:0 4px}
+#book .lv .bar{position:absolute;right:0;top:1px;bottom:1px;background:#1a2436;border-radius:2px;z-index:0}
+#book .lv span{position:relative;z-index:1}
+#book .mid{ text-align:center;color:#94a3b8;padding:2px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+#tape{height:130px;overflow-y:auto;font-size:11px}
+#tape div,#book .lv{font-family:Consolas,Menlo,monospace;font-size:11px}
+table.st{width:100%;border-collapse:collapse;font-size:11px}
+table.st td{padding:1px 4px;border-bottom:1px solid #1a2230}
+.mono{font-family:Consolas,Menlo,monospace}
+.bar2{height:6px;background:#0d1420;border-radius:3px;overflow:hidden;width:70px;display:inline-block;vertical-align:middle}
+.bar2 i{display:block;height:100%}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:9}
+#modal .box{background:var(--pn);border:1px solid #2a3550;border-radius:10px;padding:18px;max-width:520px;width:92%}
+canvas.small{width:100%;height:110px;display:block;background:#0d1119;border-radius:6px}
+.tag{font-size:10px;padding:0 4px;border-radius:3px;background:#1e293b;color:#94a3b8;margin-left:4px}
+/* ---- 响应式（平板/手机公开访问适配） ---- */
+@media (max-width:1180px){
+  #layout{grid-template-columns:300px 1fr;height:auto}
+  #layout>.col:nth-child(1){grid-row:1/3}
+  #layout>.col:nth-child(2){grid-column:2}
+  #layout>.col:nth-child(3){grid-column:2}
+  #layout>.col{max-height:none}
+}
+@media (max-width:780px){
+  #layout{grid-template-columns:1fr;padding:6px;gap:6px}
+  #layout>.col:nth-child(1){grid-row:auto}
+  #layout>.col:nth-child(2){grid-column:auto}
+  #layout>.col:nth-child(3){grid-column:auto}
+  #chart{height:260px}
+  .btn{padding:6px 10px;font-size:13px}
+  .row input,.row select{width:110px;padding:6px}
+  html,body{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div id="topbar"></div>
+<div id="layout">
+  <div class="col">
+    <div class="p" style="flex:0 0 auto">
+      <details open><summary>📖 你是庄家：玩法与真实性说明</summary>
+        <p>标的：<b>MOON/USDT</b>（微市值山寨币）。你有 <b>500万 USDT</b>。流通 10 亿枚（8 亿可交易 + 2 亿团队锁定）。</p>
+        <p><b>真实机制</b>：限价订单簿逐档撮合；做市商/套利机器人/趋势机器人/各类散户（追涨、抄底、止盈、深套不卖）实时博弈；永续合约有<b>资金费率</b>与<b>强平/止损连环爆仓</b>；价格冲击由盘口深度涌现（吃单越深滑点越大）；拉高后没有承接会被套利盘与均值回归打回来。</p>
+        <p><b>典型剧本</b>：低位挂单悄悄吸筹 → 对敲刷量造热度 → 幌骗挂单造势 → 快速拉盘引发 FOMO → 高位分批出货 / 或砸盘插针收割止损与强平 → 回收筹码。仓位+高杠杆自己也强平，别玩脱。</p>
+        <p class="dim">⚠️ 仅用于教学与研究（理解操纵机制与风控检测）。真实市场操纵违法。</p>
+      </details>
+      <h3>⚙️ 模拟控制</h3>
+      <div class="row">
+        <button class="btn" id="bPause">⏸ 暂停</button>
+        <button class="btn" id="bPlay">▶ 1x</button>
+        <button class="btn" id="bFast">▶▶ 8x</button>
+        <button class="btn" id="bStep">单步</button>
+        <button class="btn" id="bHop">快进1小时</button>
+        <button class="btn warn" id="bReset">重置</button>
+        <button class="btn warn" id="bSettle">结算</button>
+      </div>
+      <div class="row"><label><input type="checkbox" id="cGod"> 上帝视角（指数锚/止损簇/散户资金）</label></div>
+    </div>
+    <div class="p" style="flex:1">
+      <h3>🐋 现货操作 <span class="dim">(数量: MOON)</span></h3>
+      <div class="row"><input id="iQtyS" class="wide" value="200000"> <span class="dim">MOON</span></div>
+      <div class="row">
+        <button class="btn buy" id="bBuyS">市价买</button>
+        <button class="btn sell" id="bSellS">市价卖</button>
+        <button class="btn sm" id="bPct1">资金1%</button><button class="btn sm" id="bPct5">5%</button>
+        <button class="btn sm" id="bPct25">仓位25%</button><button class="btn sm" id="bPctAll">全仓卖</button>
+      </div>
+      <div class="row"><input id="iLmtP" style="width:70px" value="0.0000"> <input id="iLmtQ" class="wide" value="200000"></div>
+      <div class="row">
+        <button class="btn buy" id="bLmtB">限价买(挂单)</button>
+        <button class="btn sell" id="bLmtS">限价卖(挂单)</button>
+      </div>
+      <div class="row dim" style="font-size:10px">限价价默认 0 = 当前价±1%，可手动填</div>
+      <h3>🎭 操盘工具</h3>
+      <div class="row"><input id="iWashQ" class="wide" value="100000"><button class="btn warn" id="bWash">对敲刷量</button></div>
+      <div class="row dim" style="font-size:10px">分仓自成交：制造真实成交量→推高热度/吸引跟风；有被风控识别的概率，双边手续费照付</div>
+      <div class="row"><input id="iSpoofQ" class="wide" value="800000">
+        <button class="btn" id="bSpoofB">挂买墙(假支撑)</button>
+        <button class="btn" id="bSpoofS">挂卖墙(假压力)</button>
+        <button class="btn sm" id="bCancelAll">撤掉我的所有挂单</button>
+      </div>
+      <div class="row dim" style="font-size:10px">幌骗：大额假单影响跟风盘信心；被真实吃掉就成真单了；频繁挂撤会推高风控暴露</div>
+      <h3>⚡ 快捷</h3>
+      <div class="row"><button class="btn buy" id="bPump">🚀 拉盘(吃5档)</button><button class="btn sell" id="bDump">💥 砸盘(吃5档)</button></div>
+      <h3>🎰 永续合约</h3>
+      <div class="row">杠杆 <select id="iLev"><option>2</option><option>3</option><option selected>5</option><option>10</option><option>20</option></select>
+        <input id="iQtyP" class="wide" value="2000000"><span class="dim">MOON</span></div>
+      <div class="row">
+        <button class="btn buy" id="bLongP">开多</button>
+        <button class="btn sell" id="bShortP">开空</button>
+        <button class="btn" id="bHalfP">平50%</button>
+        <button class="btn" id="bCloseP">全平</button>
+      </div>
+      <div class="row dim" style="font-size:10px">全仓保证金：总权益跌破名义价值 0.6% 即强平。合约吃单会直接推动标记价格 → 猎杀止损/强平</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="p" style="flex:0 0 auto">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">📈 MOON/USDT · 现货K线(1m) + 指数锚 + 强平/止损标记</h3>
+        <span id="spreadInfo" class="dim"></span>
+      </div>
+      <canvas id="chart"></canvas>
+    </div>
+    <div class="p" style="flex:1">
+      <h3>📜 事件与成交日志</h3>
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="p" style="flex:0 0 auto">
+      <h3>🧾 现货盘口 <span class="tag">灰=做市 蓝=散户 黄=你的单</span></h3>
+      <div id="book"></div>
+    </div>
+    <div class="p" style="flex:0 0 auto">
+      <h3>🎯 止损/强平燃料图 (永续·上帝视角) <span id="oiInfo" class="dim"></span></h3>
+      <canvas id="heat" class="small"></canvas>
+    </div>
+    <div class="p" style="flex:0 0 auto">
+      <h3>🪙 筹码成本分布 <span id="chipInfo" class="dim"></span></h3>
+      <canvas id="chip" class="small"></canvas>
+    </div>
+    <div class="p" style="flex:0 0 auto">
+      <h3>💠 成交明细</h3>
+      <div id="tape"></div>
+    </div>
+  </div>
+</div>
+<div id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* ================= 币圈做庄模拟器 · 订单簿级微观结构引擎 =================
+   教学用途。撮合：价格-时间优先、逐档吃单、做市商补流动性。
+   Agent：做市商×3 + 永续做市、散户现货(动量/囤币/波段/抄底/FOMO)、
+   永续散户(带杠杆/止损/强平)、趋势机器人、期现套利机器人、资金费率。
+   ================================================================ */
+const HAS_DOM = (typeof window !== 'undefined') && (typeof document !== 'undefined') && !!document.getElementById;
+
+/* ---------- 工具 ---------- */
+const rnd = (a, b) => a + Math.random() * (b - a);
+function rndn(){ let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const clamp = (x, a, b) => x < a ? a : (x > b ? b : x);
+const roundP = p => Math.round(clamp(p, 0.000001, 99999) * 1e6) / 1e6;
+function fmtU(x){ const a = Math.abs(x), s = x < 0 ? '-' : ''; if (a >= 1e8) return s + (a / 1e8).toFixed(2) + '亿'; if (a >= 1e4) return s + (a / 1e4).toFixed(1) + '万'; if (a >= 1) return s + a.toFixed(0); return s + a.toFixed(2); }
+function fmtQ(x){ if (x >= 1e6) return (x / 1e6).toFixed(2) + 'M'; if (x >= 1e3) return (x / 1e3).toFixed(1) + 'K'; return x.toFixed(0); }
+function fmtP(x){ return x >= 100 ? x.toFixed(2) : x >= 10 ? x.toFixed(3) : x >= 1 ? x.toFixed(4) : x >= 0.01 ? x.toFixed(5) : x.toFixed(6); }
+function fmtT(t){ const d = Math.floor(t / 86400) + 1, h = Math.floor(t / 3600) % 24, m = Math.floor(t / 60) % 60, s = t % 60; const z = n => (n < 10 ? '0' : '') + n; return 'D' + d + ' ' + z(h) + ':' + z(m) + ':' + z(s); }
+const LOGC = { warn: 'ac', bad: 'up', good: 'dn', god: 'dim' };
+let LOGS = [];
+function log(msg, cls){ LOGS.unshift({ t: G ? G.t : 0, msg, cls: cls || '' }); if (LOGS.length > 240) LOGS.pop(); }
+
+/* ---------- 常量 ---------- */
+const FEE_ST = 0.0005, FEE_SM = 0.0002;      // 现货 吃/挂
+const FEE_PT = 0.0004, FEE_PM = 0.00015;     // 合约 吃/挂
+const FUNDING_EVERY = 8 * 3600;
+const FLOAT_TRAD = 8.0e8;                     // 可交易流通
+const CANDLE = 60, CANDLES_MAX = 480;
+const NEWS = [
+  ['📰 KOL 发推喊单 MOON：千倍叙事', 1], ['📰 交易所公告上线 MOON 杠杆 ETF', 1],
+  ['📰 项目方公布新一轮销毁计划', 1], ['📰 链上巨鲸向交易所转入 2000 万 MOON', -1],
+  ['📰 项目方代币解锁，抛压增加', -1], ['📰 黑客攻击传闻（后辟谣）', -1],
+  ['📊 审计报告：储备金透明', 1], ['📰 做市商账户调整仓位', 0]];
+
+/* ---------- 订单簿 ---------- */
+function mkBook(){ return { bids: [], asks: [] }; }
+function lvlIdx(arr, p, isBid){ for (let i = 0; i < arr.length; i++){ if (isBid ? arr[i].p <= p : arr[i].p >= p){ if (arr[i].p === p) return i; break; } } return -1; }
+function addOrder(bk, side, p, q, own, ref){
+  p = roundP(p); if (!(q > 0) || !(p > 0)) return;
+  const arr = side > 0 ? bk.bids : bk.asks;
+  let i = lvlIdx(arr, p, side > 0), lv;
+  if (i >= 0) lv = arr[i];
+  else { lv = { p, q: 0, parts: [] }; let j = 0; while (j < arr.length && (side > 0 ? arr[j].p > p : arr[j].p < p)) j++; arr.splice(j, 0, lv); }
+  lv.parts.push({ own, q, ref }); lv.q += q;
+}
+function cancelRef(bk, side, ref){
+  const arr = side > 0 ? bk.bids : bk.asks;
+  for (let i = 0; i < arr.length; i++){ const ps = arr[i].parts;
+    for (let j = 0; j < ps.length; j++) if (ps[j].ref === ref){ arr[i].q -= ps[j].q; ps.splice(j, 1); if (!ps.length) arr.splice(i, 1); return true; } }
+  return false;
+}
+function cancelOwn(bk, side, own){
+  const arr = side > 0 ? bk.bids : bk.asks; let n = 0;
+  for (let i = arr.length - 1; i >= 0; i--){
+    const keep = [];
+    for (const pt of arr[i].parts){ if (pt.own === own) n++; else keep.push(pt); }
+    if (!keep.length) arr.splice(i, 1); else { arr[i].parts = keep; arr[i].q = keep.reduce((s, p) => s + p.q, 0); }
+  }
+  return n;
+}
+// 吃单：side=+1 买(吃 asks)。反自成交：吃单方 'u' 跳过自己挂的单
+function walkBook(bk, side, qty, takerOwn, onPartFill){
+  const arr = side > 0 ? bk.asks : bk.bids;
+  let rem = qty, notional = 0, filled = 0; const fills = [];
+  while (rem > 1e-9 && arr.length){
+    const lv = arr[0]; let got = 0;
+    const ps = lv.parts;
+    for (let j = 0; j < ps.length && rem > 1e-9; j++){
+      const pt = ps[j];
+      if (takerOwn === 'u' && (pt.own === 'u' || pt.own === 'wash')) continue;
+      const take = Math.min(pt.q, rem);
+      pt.q -= take; rem -= take; got += take;
+      if (onPartFill) onPartFill(pt, take, lv.p);
+      if (pt.q <= 1e-9){ ps.splice(j, 1); j--; }
+    }
+    if (got > 0){ filled += got; notional += got * lv.p; fills.push({ p: lv.p, q: got }); lv.q = ps.reduce((s, p) => s + p.q, 0); if (!ps.length) arr.shift(); }
+    else break; // 顶层只剩自己的单，无法穿越
+  }
+  return { filled, vwap: filled > 0 ? notional / filled : 0, fills, rem };
+}
+
+/* ---------- 全局状态 ---------- */
+let G = null, U = null;
+let AGENTS = [], perpClusters = [], mms = [], pmm = null, trendBot = null;
+let oid = 0;
+
+function init(){
+  LOGS = []; oid = 0;
+  G = {
+    t: 0, fund: 0.02, dev: 0, devP: 0, depthN: 4e5, idx: 0.02, refS: 0.02, refP: 0.02, last: 0.02, lastP: 0.02, markE: 0.02,
+    spot: mkBook(), perp: mkBook(),
+    signed: [0, 0], signedN: [0, 0], volAcc: 0, volEma: 20, vol1: 0.0004,
+    sig2: 3.2e-8, hawkF: 1, hawkS: 1, cascF: 0, lastRet: 0,
+    heat: 0.25, fear: 0, casc: 0, buzz: 0, newMoney: 0, lastDir: 0, attG: 0,
+    sus: 0, warned: false, forced: false, vis: 0, uVol24: 0, whaleAlert: 0,
+    washBoost: 0, fundT: FUNDING_EVERY, funding: 0.0001,
+    candles: [], cur: null, ph: [], marks: [],
+    peak: 0.02, sellNotional: 0, sellQty: 0, cascQtyTotal: 0, harvest: 0,
+    peakEq: 5e6, maxDD: 0, liqNotional: 0, newsCd: 0
+  };
+  U = { cash: 5e6, q: 0, costP: 0, pos: null, defLev: 5, orders: [], realized: 0, fees: 0, maxHold: 0, uVol24: 0, washes: 0, spoofCancels: 0, detected: 0, liqed: 0 };
+  initAgents();
+  perpClusters = [];
+  for (let i = 0; i < 9; i++) spawnCluster(null);
+  mms = [{ inv: 0, tag: 'mm0' }, { inv: 0, tag: 'mm1' }, { inv: 0, tag: 'mm2' }];
+  pmm = { inv: 0 };
+  trendBot = { cd: 0 };
+  mmRequote(true);
+  requotePerpMM(true);
+  // 预跑 1 小时历史
+  for (let i = 0; i < 3600; i++) step();
+  LOGS = []; G.newsCd = 0;
+  log('🟢 引擎就绪。MOON/USDT 现货 ' + fmtP(G.last) + '，永续 ' + fmtP(G.lastP) + '，资金费率 ' + (G.funding * 100).toFixed(3) + '%');
+}
+
+function spawnCluster(devOverride){
+  if (perpClusters.length >= 40) return;
+  const heat = G ? G.heat : 0.3;
+  let side;
+  if (devOverride != null) side = devOverride;
+  else side = Math.random() < 0.55 ? 1 : -1;
+  const lev = [2, 3, 3, 5, 5, 10, 10][Math.floor(Math.random() * 7)];
+  const qty = rnd(2e4, 1.6e5) * (0.6 + heat);
+  const entry = roundP(G ? G.lastP : 0.02);
+  const c = { side, qty, entry, lev, liqP: side > 0 ? entry * (1 - 1 / lev + 0.006) : entry * (1 + 1 / lev - 0.006), stopP: 0 };
+  if (Math.random() < 0.45){ const d = rnd(0.02, 0.10); c.stopP = side > 0 ? entry * (1 - d) : entry * (1 + d); }
+  perpClusters.push(c);
+}
+
+/* ---------- 成交执行 ---------- */
+function exec(bk, side, qty, takerOwn, tag){
+  if (!(qty > 0)) return { filled: 0, vwap: 0, fills: [], rem: qty };
+  const isP = bk === G.perp;
+  // 关键：冲击基准必须是「成交前」的中间价
+  const mid0 = isP ? ((bestBid(G.perp) + bestAsk(G.perp)) / 2 || G.refP)
+                   : ((bestBid(G.spot) + bestAsk(G.spot)) / 2 || G.refS);
+  const r = walkBook(bk, side, qty, takerOwn, (pt, take, p) => { if (pt.ref && pt.ref.onFill) pt.ref.onFill(take, p); });
+  if (r.filled > 0){
+    const lp = r.fills[r.fills.length - 1].p;
+    // Kyle 型有界冲击：单笔冲击 ∝ 成交额 / 盘口深度，带硬上限（保证数值稳定）
+    const ntc = r.filled * r.vwap;
+    // 平方根冲击律（Tóth et al. 2011; Bouchaud）：ΔlnP ≈ Y·σ·sqrt(Q/V)
+    // 这里用盘口近端深度做归一化，Y≈0.35，并设单笔硬上限保证数值稳定
+    // 平方根冲击律（Tóth et al. 2011, PRX；Maitrier-Loeper-Bouchaud 2025 校准 Y≈0.5）：
+    //   ΔlnP = Y · σ_daily · sqrt(Q / V_daily)，δ=0.5
+    const Vd = Math.max(3.0e5, G.volEma * 1440);          // 日成交额（volEma 为每分钟口径）
+    const sigDaily = Math.sqrt(Math.max(1e-12, G.sig2 * 86400));  // 日波动
+    // 部分缩放：完全按 σ 缩放会形成 冲击→波动→更大冲击 的自激发散
+    const volRef = 0.17;  // 参考日波动 17%
+    const vScale2 = Math.pow(clamp(sigDaily / volRef, 0.25, 4), 0.35);
+    const Y = 0.16;   // 有效 Y：元订单被拆单后每笔冲击会重复计入，需按执行方式折减
+    const sqr = Y * volRef * vScale2 * Math.sqrt(Math.max(0, ntc) / Vd);
+    const imp = clamp(sqr, 0, 0.035) * (side > 0 ? 1 : -1);
+    if (isP) G.devP = clamp(G.devP + imp, -0.5, 1.2);
+    else G.dev = clamp(G.dev + imp, -0.75, 2.4);
+    if (isP) G.lastP = lp; else G.last = lp;
+    G.volAcc += r.filled * r.vwap;
+    G.signed[isP ? 1 : 0] += side > 0 ? r.filled : -r.filled;
+    G.signedN[isP ? 1 : 0] += side > 0 ? r.filled * r.vwap : -r.filled * r.vwap;
+    if (tag !== 'mm') G.lastDir = side > 0 ? 1 : -1;
+    for (const f of r.fills) TAPE.unshift({ t: G.t, p: f.p, q: f.q, tag, side });
+    if (TAPE.length > 80) TAPE.length = 80;
+  }
+  return r;
+}
+let TAPE = [];
+
+/* ---------- 做市商 ---------- */
+function bestBid(bk){ return bk.bids.length ? bk.bids[0].p : 0; }
+function bestAsk(bk){ return bk.asks.length ? bk.asks[0].p : 0; }
+const TICK = 1e-6;
+
+// 真实盘口形状：近端薄、越远越厚，价格档位按幂律拉开，总深度可延伸 20%+
+// 这样大单才能真正「扫穿」盘口，产生真实的价格冲击（而不是靠公式硬算）
+function mmRequote(force){
+  if (!force && Math.random() > 0.3) return;
+  for (const m of mms){ cancelOwn(G.spot, 1, m.tag); cancelOwn(G.spot, -1, m.tag); }
+  const totInv = mms.reduce((a, m) => a + m.inv, 0);
+  const ref = G.refS * (1 + clamp(-totInv / 3e8, -0.0010, 0.0010));
+  const spread = clamp(0.00040 + G.vol1 * 2.0, 0.00040, 0.0025);
+  // 每个价位只由一家做市商独占（真实盘口：同一 tick 合并为一条，深度叠加而非分列）
+  // 三家用互不重叠的价格带轮转，避免同价位重复档位。
+  const N = 42, base = 8.0e4;
+  for (let i = 0; i < N; i++){
+    const s = spread * Math.pow(i + 1, 1.6);
+    // 档位间距随距离缓慢变宽 → 近端薄、远端厚，且不会退化成重复价格
+    const q = base * Math.pow(1 + 0.13 * i, 1.55) * rnd(0.82, 1.18);
+    const m = mms[i % 3];
+    const bp = roundP(ref * Math.exp(-s));
+    const ap = roundP(ref * Math.exp(s));
+    const ba = bestAsk(G.spot), bb = bestBid(G.spot);
+    if (bp > 0 && !(ba > 0 && bp >= ba)) addOrder(G.spot, 1, bp, q, m.tag, { onFill: x => { m.inv += x; } });
+    if (ap > 0 && !(bb > 0 && ap <= bb)) addOrder(G.spot, -1, ap, q, m.tag, { onFill: x => { m.inv -= x; } });
+  }
+  for (const m of mms) m.inv = clamp(m.inv * 0.9995, -6e8, 6e8);
+}
+function requotePerpMM(force){
+  if (!force && Math.random() > 0.3) return;
+  cancelOwn(G.perp, 1, 'mm'); cancelOwn(G.perp, -1, 'mm');
+  const ref = G.refP * (1 + clamp(-pmm.inv / 2e8, -0.0010, 0.0010));
+  const spread = clamp(0.0005 + G.vol1 * 2.5, 0.0005, 0.003);
+  const N = 32, base = 7.0e4;
+  for (let i = 0; i < N; i++){
+    const s = spread * Math.pow(i + 1, 1.6);
+    const q = base * (1 + 0.14 * i) * rnd(0.75, 1.25);
+    const bp = roundP(ref * Math.exp(-s)), ap = roundP(ref * Math.exp(s));
+    const ba = bestAsk(G.perp), bb = bestBid(G.perp);
+    if (ba > 0 && bp >= ba) continue;
+    if (bb > 0 && ap <= bb) continue;
+    if (bp > 0) addOrder(G.perp, 1, bp, q, 'mm', { onFill: x => { pmm.inv += x; } });
+    if (ap > 0) addOrder(G.perp, -1, ap, q, 'mm', { onFill: x => { pmm.inv -= x; } });
+  }
+  pmm.inv = clamp(pmm.inv, -4e8, 4e8);
+}
+
+/* ---------- 散户现货 ---------- */
+function ret10(){ return G.ph.length > 601 ? G.last / G.ph[G.ph.length - 601] - 1 : 0; }
+function hh(ll){ const n = G.ph.length; if (n < ll + 2) return G.last; let m = 0; for (let i = n - ll - 1; i < n - 1; i++) if (G.ph[i] > m) m = G.ph[i]; return m; }
+function ll5(ll){ const n = G.ph.length; if (n < ll + 2) return G.last; let m = 1e9; for (let i = n - ll - 1; i < n - 1; i++) if (G.ph[i] < m) m = G.ph[i]; return m; }
+
+/* ==================================================================
+   个体化散户行为层（行为金融学标定）
+   ------------------------------------------------------------------
+   Kahneman & Tversky (1979); Tversky & Kahneman (1992)  累积前景理论
+       v(x)= x^α (x≥0);  -λ(-x)^β (x<0),  λ≈2.25, α≈0.88, γ≈0.61
+   Odean (1998) JF                处置效应：PGR > PLR
+   Frydman et al. (2014) JF       实现效用：卖出获利本身带来效用
+   Barber & Odean (2008) RFS      注意力驱动的净买入（买>卖的不对称）
+   Da, Engelberg & Gao (2011) JF  搜索量/关注度作为注意力代理
+   Brock & Hommes (1998) JEDC     异质信念 + logit 策略切换（强度 β）
+   Lux & Marchesi (2000) Nature   chartist / fundamentalist 微观模拟
+   Cont & Bouchaud (2000)         羊群：集群化下单产生厚尾
+   Xu & Livshits (2019) USENIX    加密 P&D 生命周期与协同群体
+   Schatzmann & Haslhofer (2023)  加密散户同样存在处置效应
+   Ardia & Bluteau (2023)         社媒关注 → 延迟卖出
+   ================================================================== */
+function sig(x){ return 1 / (1 + Math.exp(-clamp(x, -30, 30))); }
+
+const ATYPE = {
+  noise:  { share: 0.30, rate: 0.000105, aggr: 0.16, attn: 1.25, urgency: 0.55, over: 1.0 },
+  chart:  { share: 0.26, rate: 0.000086, aggr: 0.20, attn: 1.05, urgency: 0.50, over: 1.2 },
+  fund:   { share: 0.17, rate: 0.000032, aggr: 0.24, attn: 0.55, urgency: 0.25, over: 0.8 },
+  holder: { share: 0.16, rate: 0.000010, aggr: 0.10, attn: 0.30, urgency: 0.20, over: 0.6 },
+  degen:  { share: 0.08, rate: 0.000720, aggr: 0.55, attn: 1.60, urgency: 0.85, over: 1.9 },
+  pumper: { share: 0.03, rate: 0.000420, aggr: 0.70, attn: 1.90, urgency: 0.90, over: 1.6 }
+};
+
+function initAgents(){
+  AGENTS = [];
+  const N = 900, keys = Object.keys(ATYPE);
+  for (let i = 0; i < N; i++){
+    const t = ATYPE[keys[Math.floor(Math.random() * keys.length)]];
+    const wealth = Math.exp(rndn() * 1.0 + Math.log(6200));
+    const a = {
+      id: i, type: t, actRate: t.rate * 0.40, cash: wealth * rnd(0.45, 0.95),
+      qty: Math.exp(rndn() * 1.15 + Math.log(3400)) * (a1 => a1)(1),
+      ref: roundP(0.02 * Math.exp(rndn() * 0.09)),   // 参考点（成本价）异质
+      // 前景理论参数（个体异质）
+      lambda: clamp(rndn() * 0.45 + 2.25, 1.05, 4.2),
+      alpha: clamp(0.88 + rndn() * 0.07, 0.62, 1.0),
+      betaL: clamp(0.85 + rndn() * 0.08, 0.60, 1.0),
+      gamma: clamp(0.61 + rndn() * 0.09, 0.40, 0.85),
+      attn: t.attn * rnd(0.6, 1.5),
+      beta: rnd(0.8, 3.6),          // logit 强度（Brock-Hommes）
+      urgency: t.urgency * rnd(0.7, 1.3),
+      overconf: t.over * rnd(0.65, 1.4),
+      aggr: t.aggr * rnd(0.55, 1.5),
+      strat: Math.random() < 0.5 ? 'chart' : 'fund',
+      pChart: 0.5,
+      profitChart: rnd(-0.05, 0.05), profitFund: rnd(-0.05, 0.05),
+      panic: 0, nTrade: 0, nextAct: Math.floor(Math.random() * 100),
+      // 处置效应统计（用于验证 PGR/PLR）
+      realGain: 0, realLoss: 0, paperGainT: 0, paperLossT: 0
+    };
+    a.qty = Math.max(200, a.qty);
+    AGENTS.push(a);
+  }
+  // 让总持仓接近流通盘的 55%
+  let tot = 0; for (const a of AGENTS) tot += a.qty;
+  const k = 4.4e8 / Math.max(1, tot);
+  for (const a of AGENTS) a.qty *= k;
+}
+
+function updateBuzz(){
+  G.buzz = G.buzz * 0.9985;
+  if (G.heat > 0.9) G.buzz = Math.min(3, G.buzz + (G.heat - 0.9) * 0.0016);
+}
+
+// 单个散户的一次决策
+function agentAct(a){
+  const p = G.last;
+  const g = p / a.ref - 1;
+  // ---- 前景理论价值函数 ----
+  const gg = isFinite(g) ? g : 0;
+  const v = gg >= 0 ? Math.pow(gg, a.alpha) : -a.lambda * Math.pow(-gg, a.betaL);
+  // ---- 注意力（Barber-Odean: 关注度→买入；Da et al.: 极端收益/放量/新闻）----
+  const absR = Math.abs(ret10());
+  const attnRaw = a.attn * (0.22 + 0.42 * G.heat + Math.min(0.9, absR * 16) + 0.45 * G.buzz + 0.35 * G.vis);
+  const attnN = isFinite(attnRaw) ? clamp(attnRaw, 0, 2.2) : 0.3;
+
+  // ---- 策略切换：Brock-Hommes logit（用近期策略收益差决定信念）----
+  const mom = ret10();
+  a.profitChart = 0.98 * a.profitChart + 0.02 * (mom * 8);
+  a.profitFund  = 0.98 * a.profitFund  + 0.02 * ((G.fund / p - 1) * 6);
+  a.pChart = sig(a.beta * (a.profitChart - a.profitFund) * 3);
+  a.strat = Math.random() < a.pChart ? 'chart' : 'fund';
+
+  // ---- 羊群（Cont-Bouchaud）：集群化，越热越容易从众 ----
+  const herdP = 0.03 + 0.12 * clamp(G.heat - 0.5, 0, 1) + 0.10 * G.fear;
+  let herdSide = 0;
+  if (Math.random() < herdP && G.lastDir) herdSide = G.lastDir;
+
+  // ---- 卖出：处置效应 + 实现效用 ----
+  if (a.qty > 1){
+    let pSell;
+    // Odean(1998)/Frydman et al.(2014)：盈利时卖出概率显著高于亏损时，
+    // 但幅度有限（PGR/PLR≈2，不是 10+）。用温和的 logit 斜率实现。
+    const sellBias = -1.55;                       // 基准卖出倾向（低）
+    // 处置效应强度随散户流入状态变化（Schatzmann & Haslhofer 2023：
+    // 效应在 2017 散户涌入前不显著 t=-1.54，涌入后显著 t=-29~-45 → 与热度/流入挂钩）
+    const deK = clamp(0.45 + 1.5 * G.heat, 0.45, 1.6);
+    if (g > 0.005){
+      pSell = sig(0.62 * v + sellBias + 0.30 * attnN + 0.75 * G.fear + 0.24 * deK);
+    } else if (g < -0.005){
+      pSell = sig(0.62 * v + sellBias - 0.42 * deK + 1.55 * G.fear + 1.15 * a.panic + 0.22 * attnN);
+    } else {
+      pSell = sig(sellBias + 0.2);
+    }
+    if (herdSide === -1) pSell = Math.min(0.95, pSell * 1.8 + 0.05);
+    pSell = clamp(pSell * a.overconf * 0.85, 0, 0.9);
+    // 挂单 vs 吃单：急迫度决定
+    if (Math.random() < pSell){
+      const value = Math.exp(rndn() * 1.35 + Math.log(17)) * (1 + 0.5 * attnN) * (a.type === ATYPE.degen ? 2.2 : 1);
+      const frac = Math.min(0.85, value / Math.max(1, a.qty * p));
+      const q = Math.min(a.qty, Math.max(1, a.qty * frac));
+      const urgent = Math.random() < a.urgency * (0.6 + 0.8 * attnN);
+      if (urgent){
+        const r = exec(G.spot, -1, q, 'ret', 'ret');
+        if (r.filled > 0){ a.qty -= r.filled; a.cash += r.filled * r.vwap; a.nTrade++;
+          if (g >= 0){ a.realGain += r.filled * (r.vwap - a.ref); } else { a.realLoss += r.filled * (a.ref - r.vwap); } }
+      } else {
+        // 限价卖：挂在自己愿意接受的价格（不追跌）
+        const lp = roundP(p * (1 + rnd(0.001, 0.012)));
+        const ref2 = { onFill: (fq, fp) => { a.qty -= fq; a.cash += fq * fp; a.nTrade++;
+          if (fp >= a.ref) a.realGain += fq * (fp - a.ref); else a.realLoss += fq * (a.ref - fp); } };
+        addOrder(G.spot, -1, lp, q, 'ret', ref2);
+        REST.push({ ref: ref2, ttl: Math.floor(rnd(20, 90)) });
+      }
+    }
+  }
+
+  // ---- 买入：注意力驱动 + 异质信念 ----
+  const expEdge = a.strat === 'chart' ? mom * 2.4 : (G.fund / p - 1) * 1.5;
+  let pBuy = sig(3.1 * expEdge + 1.15 * attnN - 1.10);
+  // 亏损时补仓摊薄（心理账户 / 处置效应的另一面）
+  if (g < -0.12 && a.cash > p * 100) pBuy *= 1.35;
+  if (herdSide === 1) pBuy = Math.min(0.95, pBuy * 1.9 + 0.06);
+  // 价格远高于基本面时，价值型投资者退场
+  if (a.strat === 'fund' && p > G.fund * 1.4) pBuy *= 0.35;
+  pBuy = clamp(pBuy * a.overconf, 0, 0.92);
+  if (a.cash > p * 200 && Math.random() < pBuy){
+    // 实证：散户单笔金额对数正态（微市值盘中位 ~$28）；FOMO 峰值时梭哈全仓
+    // （La Morgia 2025: 人群在 19-21 秒内涌入，拉升由人群完成；Barber-Odean 注意力净买入）
+    let ticket = Math.exp(rndn() * 1.25 + Math.log(14)) * (1 + 0.45 * attnN) * a.aggr;
+    if (attnN > 0.7 && Math.random() < 0.45) ticket = Math.max(ticket, a.cash * rnd(0.10, 0.40) * attnN);
+    const budget = Math.min(a.cash * (0.35 + 0.5 * attnN), ticket);
+    if (budget > p * 5){
+      const q = budget / p;
+      const urgent = Math.random() < a.urgency * (0.5 + 0.9 * attnN);
+      if (urgent){
+        const r = exec(G.spot, 1, q, 'ret', 'ret');
+        if (r.filled > 0){
+          a.ref = (a.ref * a.qty + r.filled * r.vwap) / (a.qty + r.filled);
+          a.qty += r.filled; a.cash -= r.filled * r.vwap; a.nTrade++;
+        }
+      } else {
+        const lp = roundP(p * (1 - rnd(0.002, 0.018)));
+        const ref2 = { onFill: (fq, fp) => { a.ref = (a.ref * a.qty + fq * fp) / (a.qty + fq); a.qty += fq; a.cash -= fq * fp; a.nTrade++; } };
+        addOrder(G.spot, 1, lp, q, 'ret', ref2);
+        REST.push({ ref: ref2, ttl: Math.floor(rnd(25, 120)) });
+      }
+    }
+  }
+}
+
+let REST = [];
+function retailSpot(){
+  updateBuzz();
+  const fear = G.fear;
+  for (const a of AGENTS){
+    // 恐慌与强平压力
+    a.panic = clamp(a.panic * 0.995 + (G.casc > 0 ? 0.004 : 0) + Math.max(0, -ret10()) * 0.9, 0, 1.5);
+    if (Math.random() < a.actRate * (1 + 2.5 * (G.attG || 0))) agentAct(a);   // 注意力→盯盘/交易频率
+  }
+  // 挂单到期/撤单
+  for (let i = REST.length - 1; i >= 0; i--){
+    if (--REST[i].ttl <= 0){ cancelRef(G.spot, 1, REST[i].ref); cancelRef(G.spot, -1, REST[i].ref); REST.splice(i, 1); }
+  }
+  // 恐慌时集中撤买盘（流动性蒸发）
+  if (fear > 0.7 && Math.random() < 0.15){
+    for (let i = REST.length - 1; i >= 0; i--){
+      if (REST[i].ref && REST[i].ref.side !== -1 && Math.random() < 0.12){ cancelRef(G.spot, 1, REST[i].ref); REST.splice(i, 1); }
+    }
+  }
+  // ---- 外部资金入场（Barber-Odean 注意力 / Da-Engelberg-Gao 搜索量）----
+  // 新钱不是均匀细流，而是「关注度事件」驱动的泊松到达：热搜→一波开户入金。
+  // 价格越离谱，边际接盘意愿越低（需求曲线向下），这是泡沫的天花板。
+  const devF = Math.max(0, Math.log(G.last / G.fund) - 0.45);
+  const cool = Math.exp(-1.8 * devF);
+  // 秒级脉冲响应：急涨即刻引来追价资金（La Morgia 2025: 人群在第 19-21 秒到达；
+  // Barber-Odean 2008: 注意力净买入是当日的、非对称的）
+  const spike = clamp(Math.max(0, ret10()) * 26, 0, 1.3);
+  const arr = 0.004 + 0.055 * Math.pow(clamp(G.heat - 0.55, 0, 1), 2) + 0.030 * G.buzz + 0.16 * spike;
+  if (Math.random() < arr * cool){
+    // 单个事件带来的入金：对数正态，重尾（少数大戶 + 大量小散）；脉冲越大钱越多
+    const burst = Math.exp(rndn() * 1.15 + Math.log(280)) * (0.6 + 1.5 * clamp(G.heat - 0.6, 0, 1)) * (1 + spike);
+    const n = 1 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < n; k++){
+      const a = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+      const amt = burst / n * rnd(0.3, 1.7);
+      a.cash += amt; G.newMoney += amt;
+      // 追价者立刻进场（La Morgia 2025: 人群在 19-21 秒内完成交易，不等泊松钟）
+      if (Math.random() < 0.75 && G.last > 0){
+        const q = amt * rnd(0.5, 0.95) / G.last;
+        const r = exec(G.spot, 1, q, 'ret', 'ret');
+        if (r.filled > 0){
+          a.ref = (a.ref * a.qty + r.filled * r.vwap) / (a.qty + r.filled);
+          a.qty += r.filled; a.cash -= r.filled * r.vwap; a.nTrade++;
+          a.buyNotional = (a.buyNotional || 0) + r.filled * r.vwap;
+        }
+      }
+    }
+  }
+}
+
+/* ---------- 永续散户 / 强平引擎 ---------- */
+function retailPerp(){
+  const r10 = ret10(), heat = G.heat, dev = G.last / G.idx - 1;
+  if (r10 > 0.008 && heat > 0.6 && Math.random() < 0.03 * heat) spawnCluster(1);           // 追多
+  if (r10 < -0.02 && Math.random() < 0.04) spawnCluster(-1);                                // 做空趋势
+  if (dev > 0.10 && Math.random() < 0.03) spawnCluster(-1);                                 // 抄顶做空
+  if (r10 < -0.035 && Math.random() < 0.035) spawnCluster(1);                               // 刀口舔血抄底多
+  // 资金费率过高 → 多头减仓
+  if (G.funding > 0.0025) for (let i = perpClusters.length - 1; i >= 0; i--){ const c = perpClusters[i]; if (c.side > 0 && Math.random() < 0.03){ exec(G.perp, -1, c.qty, 'ret', 'ret'); perpClusters.splice(i, 1); } }
+  if (G.funding < -0.0025) for (let i = perpClusters.length - 1; i >= 0; i--){ const c = perpClusters[i]; if (c.side < 0 && Math.random() < 0.03){ exec(G.perp, 1, c.qty, 'ret', 'ret'); perpClusters.splice(i, 1); } }
+  // 获利了结
+  for (let i = perpClusters.length - 1; i >= 0; i--){ const c = perpClusters[i];
+    const pnl = c.side * (G.lastP / c.entry - 1);
+    if (pnl > 0.12 && Math.random() < 0.01){ exec(G.perp, -c.side, c.qty, 'ret', 'ret'); perpClusters.splice(i, 1); }
+  }
+}
+
+function riskEngine(){
+  const mark = clamp(G.markE, G.idx * 0.85, G.idx * 1.15);
+  for (let iter = 0; iter < 6; iter++){
+    let fired = false;
+    for (let i = perpClusters.length - 1; i >= 0; i--){
+      const c = perpClusters[i];
+      if (c.side > 0){
+        if (mark <= c.liqP){ exec(G.perp, -1, c.qty, 'liq', 'liq'); onCascade(c, true); perpClusters.splice(i, 1); fired = true; }
+        else if (c.stopP && G.lastP <= c.stopP){ exec(G.perp, -1, c.qty, 'stop', 'stop'); onCascade(c, false); perpClusters.splice(i, 1); fired = true; }
+      } else {
+        if (mark >= c.liqP){ exec(G.perp, 1, c.qty, 'liq', 'liq'); onCascade(c, true); perpClusters.splice(i, 1); fired = true; }
+        else if (c.stopP && G.lastP >= c.stopP){ exec(G.perp, 1, c.qty, 'stop', 'stop'); onCascade(c, false); perpClusters.splice(i, 1); fired = true; }
+      }
+    }
+    // 用户强平（全仓）
+    if (U.pos){
+      const eq = userEquity();
+      if (eq < 0.006 * U.pos.qty * mark){
+        const side = U.pos.side, qty = U.pos.qty;
+        const r = exec(G.perp, -side, qty, 'liq', 'liq');
+        applyPerpFill(-side * r.filled, r.filled > 0 ? r.vwap : G.lastP, 0);
+        U.liqed++; G.casc += qty * G.lastP; G.cascQtyTotal += qty;
+        log('💀 你的合约仓位被强平！名义 ' + fmtU(qty * G.lastP) + ' USDT', 'bad');
+        fired = true;
+      }
+    }
+    if (!fired) break;
+  }
+}
+function onCascade(c, isLiq){
+  const n = c.qty * G.lastP;
+  G.casc += c.qty; G.cascQtyTotal += c.qty; G.liqNotional += n;
+  G.lastCascT = G.t;
+  const cd = G.cur; if (cd){ if (c.side > 0) cd.liqL += c.qty; else cd.liqS += c.qty; }
+  if (isLiq && n > 3e4) log('🔴 ' + (c.side > 0 ? '多头' : '空头') + '强平 ' + fmtU(n) + ' USDT @' + fmtP(G.lastP), 'warn');
+}
+
+/* ---------- 机器人 ---------- */
+function trendBotStep(){
+  const b = trendBot;
+  if (b.cd > 0){ b.cd--; return; }
+  const h = hh(300), l = ll5(300);
+  if (G.last > h * 1.0005 && G.heat > 0.55 && Math.random() < 0.5){ exec(G.spot, 1, rnd(1e4, 6e4) * G.heat * 0.5, 'bot', 'bot'); b.cd = Math.floor(rnd(20, 90)); }
+  else if (G.last < l * 0.9995 && Math.random() < 0.5){ exec(G.spot, -1, rnd(1e4, 5e4), 'bot', 'bot'); b.cd = Math.floor(rnd(20, 90)); }
+}
+function arbStep(){
+  // 期现套利：资本有限、只对显著偏离出手，规模与盘口深度挂钩（不是无限弹药）
+  const bb = bestBid(G.spot), ba = bestAsk(G.spot);
+  const mid = (bb > 0 && ba > 0) ? (bb + ba) / 2 : G.last;
+  const dev = mid / G.idx - 1;
+  if (Math.abs(dev) > 0.012 && Math.random() < 0.35){
+    let dep = 0; const lim = G.idx * 0.02;
+    for (const lv of G.spot.bids){ if (lv.p < G.idx - lim) break; dep += lv.q; }
+    for (const lv of G.spot.asks){ if (lv.p > G.idx + lim) break; dep += lv.q; }
+    const q = clamp(Math.abs(dev) * dep * 0.12, 2e4, dep * 0.10);
+    if (q > 0){
+      const r = exec(G.spot, dev > 0 ? -1 : 1, q, 'arb', 'arb');
+      if (r.filled > 0 && Math.abs(dev) > 0.15 && Math.random() < 0.06) log('🤖 期现套利盘对冲 ' + fmtQ(r.filled) + ' MOON', 'god');
+    }
+  }
+  const devP = G.lastP / G.last - 1;
+  if (Math.abs(devP) > 0.006 && Math.random() < 0.4){
+    const q = clamp(Math.abs(devP) * 3e6, 1e4, 2e5);
+    exec(G.perp, devP > 0 ? -1 : 1, q, 'arb', 'arb');
+  }
+}
+
+/* ---------- 用户账户 ---------- */
+function userEquity(){ return U.cash + U.q * G.last + upnl(); }
+function upnl(){ return U.pos ? U.pos.side * U.pos.qty * (G.markE - U.pos.entry) : 0; }
+function applyPerpFill(dQty, p, fee){
+  if (fee > 0){ U.fees += fee; U.cash -= fee; }
+  if (Math.abs(dQty) < 1e-9) return;
+  if (!U.pos){ U.pos = { side: Math.sign(dQty), qty: Math.abs(dQty), entry: p, lev: U.defLev }; }
+  else if (Math.sign(dQty) === U.pos.side){ const nq = U.pos.qty + Math.abs(dQty); U.pos.entry = (U.pos.entry * U.pos.qty + Math.abs(dQty) * p) / nq; U.pos.qty = nq; }
+  else {
+    const close = Math.min(U.pos.qty, Math.abs(dQty));
+    U.realized += U.pos.side * close * (p - U.pos.entry);
+    U.pos.qty -= close;
+    const rem = Math.abs(dQty) - close;
+    if (U.pos.qty <= 1e-9) U.pos = rem > 1e-9 ? { side: Math.sign(dQty), qty: rem, entry: p, lev: U.defLev } : null;
+  }
+  if (U.pos && U.pos.qty < 1e-6) U.pos = null;
+}
+function userFill(o, fq, p){
+  if (!(fq > 0)) return;
+  if (o.bk === 's'){
+    if (o.side > 0){ const fee = fq * p * FEE_SM; U.cash -= fq * p + fee; U.fees += fee; const nq = U.q + fq; U.costP = (U.costP * U.q + fq * p) / nq; U.q = nq; }
+    else { const fee = fq * p * FEE_SM; U.cash += fq * p - fee; U.fees += fee; U.realized += (p - U.costP) * fq; U.q -= fq; G.sellNotional += fq * p; G.sellQty += fq; }
+  } else {
+    applyPerpFill(o.side * fq, p, fq * p * FEE_PM);
+  }
+  U.uVol24 += fq * 0.5;
+  if (o.spoof && o.filled / o.q > 0.05) log('🔶 幌骗单被真实成交 ' + fmtQ(fq) + ' @' + fmtP(p), 'warn');
+  G.marks.push({ t: G.t, p, side: o.side, bk: o.bk }); if (G.marks.length > 400) G.marks.shift();
+}
+function placeLimit(bkName, side, p, q, spoof){
+  p = roundP(p); if (!(q > 0) || !(p > 0)) return null;
+  const bk = bkName === 's' ? G.spot : G.perp;
+  // 可成交限价单：立即以盘口价吃单，剩余才挂单
+  const crossing = side > 0 ? (bestAsk(bk) > 0 && p >= bestAsk(bk)) : (bestBid(bk) > 0 && p <= bestBid(bk));
+  if (crossing){
+    const r = bkName === 's' ? uMarketSpot(side, q, 'u') : perpMarket(side, q);
+    const rest = q - r.filled;
+    if (rest > 1) { return placeLimitRaw(bkName, side, p, rest, spoof); }
+    return null;
+  }
+  return placeLimitRaw(bkName, side, p, q, spoof);
+}
+function placeLimitRaw(bkName, side, p, q, spoof){
+  if (U.orders.length > 60){ log('挂单过多', 'warn'); return null; }
+  if (bkName === 's'){
+    let locked = 0;
+    for (const o of U.orders) if (o.bk === 's' && o.spoof) locked += o.side > 0 ? o.p * o.q : 0;
+    if (side > 0 && q * p > Math.max(0, U.cash - locked) * 0.98){ log('💰 挂单需保证金：资金不足', 'warn'); return null; }
+    if (side < 0 && q > U.q){ log('🪙 挂卖超出持仓', 'warn'); return null; }
+  }
+  const id = ++oid;
+  const o = { id, bk: bkName, side, p, q, remain: q, filled: 0, spoof: !!spoof, ref: null };
+  o.ref = { onFill: (fq, fp) => { o.filled += fq; userFill(o, fq, fp); } };
+  addOrder(bkName === 's' ? G.spot : G.perp, side, p, q, 'u', o.ref);
+  U.orders.push(o);
+  return o;
+}
+function cancelOrder(o){ const i = U.orders.indexOf(o); if (i >= 0){ cancelRef(o.bk === 's' ? G.spot : G.perp, o.side, o.ref); U.orders.splice(i, 1); if (o.spoof && o.filled < o.q * 0.1){ U.spoofCancels++; G.sus = Math.min(120, G.sus + 0.18); } } }
+function uMarketSpot(side, qty, tag){
+  if (!(qty > 0)) return { filled: 0, vwap: 0, fills: [], rem: qty };
+  if (side > 0){
+    let q = qty;
+    for (let it = 0; it < 4; it++){
+      let cost = 0, rem = q; const arr = G.spot.asks;
+      for (const lv of arr){ for (const pt of lv.parts){ if (rem <= 1e-9) break; const take = Math.min(pt.q, rem); cost += take * lv.p; rem -= take; } if (rem <= 1e-9) break; }
+      if (rem > 1e-9) cost += rem * (G.refS * 1.3);   // 穿透后按更差价格估算
+      cost *= 1 + FEE_ST;
+      if (cost <= U.cash * 0.995) break;
+      q *= (U.cash * 0.99) / cost;
+    }
+    if (q < qty) log('💰 余额不足：本次最多买 ' + fmtQ(q) + ' MOON', 'warn');
+    qty = q;
+  } else {
+    if (qty > U.q){ log('🪙 持仓不足：只能卖 ' + fmtQ(U.q) + ' MOON', 'warn'); qty = Math.max(0, U.q); }
+  }
+  if (!(qty > 1)) return { filled: 0, vwap: 0, fills: [], rem: 0 };
+  const r = exec(G.spot, side, qty, 'u', tag || 'u');
+  if (r.filled > 0){
+    const fee = r.filled * r.vwap * FEE_ST;
+    if (side > 0){ U.cash -= r.filled * r.vwap + fee; const nq = U.q + r.filled; U.costP = (U.costP * U.q + r.filled * r.vwap) / nq; U.q = nq; }
+    else { U.cash += r.filled * r.vwap - fee; U.realized += (r.vwap - U.costP) * r.filled; U.q -= r.filled; G.sellNotional += r.filled * r.vwap; G.sellQty += r.filled; }
+    U.fees += fee; U.uVol24 += r.filled;
+    for (const f of r.fills){ G.marks.push({ t: G.t, p: f.p, side, bk: 's' }); }
+    if (G.marks.length > 400) G.marks.shift();
+    if (G.t - (G.lastCascT || -1e9) < 120 && side > 0) G.harvest += r.filled;
+  }
+  if (r.rem > 1 && r.filled === 0) log('⚠️ ' + (side > 0 ? '上方' : '下方') + '无对手盘（流动性枯竭）', 'warn');
+  else if (r.rem > 1) log('部分成交 ' + fmtQ(r.filled) + '/' + fmtQ(qty) + '，均价 ' + fmtP(r.vwap), 'warn');
+  return r;
+}
+function perpMarket(side, qty){
+  if (!(qty > 0)) return { filled: 0, vwap: 0, fills: [], rem: qty };
+  const eqv = userEquity(), lev = U.defLev;
+  const netBefore = U.pos ? U.pos.side * U.pos.qty : 0;
+  const netAfter = netBefore + side * qty;
+  const inc = Math.max(0, Math.abs(netAfter) - Math.abs(netBefore));
+  const maxInc = Math.max(0, (eqv * 0.92 - Math.abs(netBefore) * G.lastP / lev) * lev / Math.max(G.lastP, 1e-9));
+  if (inc > maxInc){ qty = Math.max(0, Math.abs(netBefore) - Math.abs(netBefore + side * maxInc)) ; qty = maxInc; log('🛡 保证金不足：最多可开 ' + fmtQ(maxInc) + ' MOON', 'warn'); }
+  if (!(qty > 1)) return { filled: 0, vwap: 0, fills: [], rem: 0 };
+  const r = exec(G.perp, side, qty, 'u', 'u');
+  if (r.filled > 0){
+    applyPerpFill(side * r.filled, r.vwap, r.filled * r.vwap * FEE_PT);
+    U.uVol24 += r.filled;
+    for (const f of r.fills){ G.marks.push({ t: G.t, p: f.p, side, bk: 'p' }); }
+    if (G.marks.length > 400) G.marks.shift();
+  }
+  return r;
+}
+function doWash(qty){
+  qty = Math.min(qty, U.cash * 0.9 / Math.max(G.last, 1e-9));
+  if (!(qty > 1)){ log('💰 资金不足，无法对敲', 'warn'); return; }
+  qty = Math.min(qty, U.q);   // 无持仓不能对敲（卖腿成交会减仓）
+  if (!(qty > 1)) return;
+  const ba0 = bestAsk(G.spot) || G.last * 1.001;
+  const p = roundP(ba0 * (1 - rnd(0.0001, 0.0006)));   // 挂进最优卖档内 → 买腿优先自成交
+  let soldQ = 0;
+  const ref = { onFill: (fq, fp) => { const fee = fq * fp * FEE_SM; U.cash += fq * fp - fee; U.fees += fee; U.q = Math.max(0, U.q - fq); soldQ += fq; } };
+  addOrder(G.spot, -1, p, qty, 'wash', ref);
+  const r = exec(G.spot, 1, qty, 'u2', 'wash');
+  const feeB = r.filled * r.vwap * FEE_ST;
+  U.cash -= r.filled * r.vwap + feeB; U.fees += feeB;
+  U.q += r.filled;                       // 买腿：持仓增加
+  if (r.filled > soldQ){                 // 未被自己卖腿吸收的净买入 → 摊薄成本
+    const nb = r.filled - soldQ;
+    U.costP = (U.costP * Math.max(0, U.q - nb) + r.vwap * nb) / Math.max(1, U.q);
+  }
+  G.washBoost += Math.min(0.3, r.filled / Math.max(1e3, G.volEma) * 0.08);
+  U.washes++;
+  if (r.filled > 0){ G.marks.push({ t: G.t, p: r.vwap, side: 1, bk: 's' }); if (G.marks.length > 400) G.marks.shift(); }
+  // 撤掉未成交的卖腿
+  cancelRef(G.spot, -1, ref);
+  G.sus = Math.min(120, G.sus + 0.22);   // 关联账户自成交必然留痕
+  if (Math.random() < 0.010 + G.sus * 0.0012){
+    U.detected++; G.sus = Math.min(120, G.sus + 15);
+    const fine = Math.min(2e5, userEquity() * 0.02);
+    U.cash -= fine; U.fees += fine;
+    log('🚨 交易所风控：识别出关联账户自成交（对敲），冻结 ' + fmtU(fine) + ' USDT', 'bad');
+  }
+}
+function spoofWall(side, qty){
+  for (let i = 1; i <= 3; i++){
+    const p = roundP(G.last * (1 + side * -0.01 * i));
+    placeLimit('s', side, p, qty * rnd(0.7, 1.3), true);
+  }
+  log('🔶 幌骗墙已挂出（' + (side > 0 ? '买' : '卖') + ' ' + fmtQ(qty) + '×3 档）', 'god');
+}
+function userWalls(){
+  let wb = 0, wa = 0;
+  for (const o of U.orders) if (o.bk === 's'){ if (o.side > 0) wb += o.remain; else wa += o.remain; }
+  return { wb, wa };
+}
+
+/* ---------- 主循环 ---------- */
+function step(){
+  G.t++;
+  // 1) 指数锚 & 消息面
+  G.fund *= Math.exp(rndn() * 0.00013);
+  if (--G.newsCd <= 0 && Math.random() < 0.00016){
+    const nw = NEWS[Math.floor(Math.random() * NEWS.length)];
+    const mag = rnd(0.008, 0.04) * (nw[1] > 0 ? 1 : -1);
+    G.fund *= Math.exp(mag);
+    G.heat = clamp(G.heat + 0.2, 0.05, 3);
+    log(nw[0] + '（锚价 ' + (mag > 0 ? '+' : '') + (Math.exp(mag) - 1).toFixed(1) + '%）', nw[1] > 0 ? 'good' : 'bad');
+    G.newsCd = Math.floor(rnd(2000, 9000));
+  }
+  // 2) 各方流动性
+  retailSpot(); retailPerp(); trendBotStep(); arbStep();
+  // 3) 强平/止损级联
+  riskEngine();
+  // 4) 永久性价格冲击（Kyle λ）+ 均值回归
+  // 现货永久冲击：按成交额平方根（Kyle λ 的实证近似），并缓慢向指数锚回归
+  G.signedN[0] = 0;
+  // ===== 价格核心：对数偏离 dev 的均值回归随机过程（OU）=====
+  // 交易冲击已写入 dev，这里只处理回归与噪声 —— 结构上不可能数值发散。
+  const heatN = clamp((G.heat - 0.8) / 1.6, 0, 1);
+  const lamS = 0.000045 * (1 - 0.55 * heatN);      // 半衰期~4.3h；太快会抹平波动聚集
+
+  // ---- 波动率：双时间尺度 GARCH + 杠杆效应 ----
+  // 快组件（半衰期16min）：日内波动聚集（Cont 2001；Bacry-Muzy 2014 Hawkes 等价形式）
+  // 慢组件（半衰期~5h）：市场状态切换 → 小时级厚尾（BTC 5-12h 峰度 27-107, Bariviera 2017）
+  // 杠杆效应：负收益激发波动更强（Black 1976；Nelson 1991 EGARCH）→ 负偏度（BTC 日偏度 -1.2~-3.6）
+  const H_BASE = 3.2e-8;                       // 基线每tick方差
+  const Z2 = (G.lastRet * G.lastRet) / Math.max(1e-12, G.sig2);   // 标准化冲击平方
+  const negBoost = G.lastRet < 0 ? 1.8 : 0.7;  // 杠杆效应：坏消息比好消息激发更强
+  G.hawkF = 0.0006 * Math.min(30, Z2 * negBoost) + 0.9993 * G.hawkF + 0.0001;
+  G.hawkS = 0.000022 * Math.min(24, Z2 * negBoost) + 0.99996 * G.hawkS + 0.000018;
+  G.hawkF = clamp(G.hawkF, 0.08, 34);
+  G.hawkS = clamp(G.hawkS, 0.25, 5);
+  // 罕见跳空：新闻 / 交易所故障。崩盘概率与幅度均大于暴涨（负偏度来源之一）
+  let jump = 0;
+  if (Math.random() < 0.00022 + heatN * 0.0009){
+    const sz = Math.exp(rndn() * 1.05 + 0.55) * Math.sqrt(H_BASE * (1 + G.hawkF)) * 5.0;
+    const neg = Math.random() < 0.58;
+    jump = (neg ? -1 : 1) * sz * (neg ? 1.2 : 0.85);
+    G.hawkF = Math.min(20, G.hawkF + 6.0);
+    // 清算级联（Garcia Seuma 2025: 次临界分支 λ≈0.1-0.2，88% 强制抛压在 30min 内）
+    // 大幅负跳后，杠杆多头连环爆仓 → 强制卖压指数衰减
+    if (neg && sz > 0.010 && Math.random() < 0.6){
+      G.cascF = clamp(G.cascF + sz * (1.5 + Math.random() * 1.5), 0, 0.07);
+      G.hawkF = Math.min(20, G.hawkF + 5.0);
+    }
+  }
+  // 级联卖压：约 8 分钟半衰期的强制抛售流
+  if (G.cascF > 1e-6){
+    jump -= G.cascF * 0.0009;
+    G.cascF *= 0.99857;
+    if (G.cascF < 1e-6) G.cascF = 0;
+  }
+  G.sig2 = clamp(H_BASE * (1 + G.hawkF) * (0.55 + 0.45 * G.hawkS), 1.2e-8, 8.0e-6);
+
+  const sig = Math.sqrt(G.sig2) * (1 + 0.45 * heatN);
+  const dRet = sig * rndn() + jump;
+  G.dev = G.dev * (1 - lamS) + dRet;
+  G.dev = clamp(G.dev, -0.75, 2.4);
+  G.lastRet = dRet;
+  G.devP = clamp(G.devP * 0.9990 + rndn() * 0.0004 * Math.sqrt(G.sig2 / 6.8e-8), -0.5, 1.2);
+
+  G.refS = G.fund * Math.exp(G.dev);
+  G.refP = G.refS * Math.exp(clamp(G.devP, -0.4, 0.4));
+  G.last = G.refS;
+  G.lastP = G.refP;
+  // 盘口近端深度（用于冲击标定）
+  let dn = 0;
+  for (const lv of G.spot.asks){ if (lv.p > G.refS * 1.02) break; dn += lv.q * lv.p; }
+  if (dn > 0) G.depthN = G.depthN * 0.98 + dn * 0.02;
+  // 认知锚：基本面 + 被热度放大的价格反馈（反身性 = 控盘能成立的根源）
+  const pullFund = (Math.log(G.fund) - Math.log(G.idx)) * 0.0016 * (1 - 0.7 * heatN);
+  const pullMkt  = (Math.log(G.last) - Math.log(G.idx)) * 0.0100 * heatN;
+  G.idx *= Math.exp(clamp(pullFund + pullMkt, -0.012, 0.012));
+  G.idx = clamp(G.idx, G.fund * 0.5, G.fund * 3.5);
+  G.markE = G.markE * 0.97 + G.lastP * 0.03;
+  // 数值护栏
+  if (!isFinite(G.last) || G.last <= 0) G.last = G.idx;
+  if (!isFinite(G.lastP) || G.lastP <= 0) G.lastP = G.idx;
+  if (!isFinite(G.refS) || G.refS <= 0) G.refS = G.idx;
+  if (!isFinite(G.refP) || G.refP <= 0) G.refP = G.refS;
+  const _bb = bestBid(G.spot), _ba = bestAsk(G.spot);
+  if (!G.spot.bids.length || !G.spot.asks.length || (_bb > 0 && _ba > 0 && _ba / _bb - 1 > 0.015)) mmRequote(true);
+  if (!G.perp.bids.length || !G.perp.asks.length) requotePerpMM(true);
+  // 6) 热度 / 情绪 / 资金
+  G.volEma = G.volEma * 0.9995 + G.volAcc * 0.0005;
+  const turnRatio = G.volAcc / Math.max(40, G.volEma * 3);
+  const heatTarget = clamp(0.15 + Math.log(1 + Math.max(0, turnRatio - 1)) * 0.55
+                     + Math.abs(ret10()) * 6 + G.washBoost * 0.5, 0.02, 2.6);
+  G.heat = clamp(G.heat + (heatTarget - G.heat) * 0.03, 0.05, 3);
+  G.attG = clamp(Math.abs(ret10()) * 16 + 0.45 * G.heat + 0.55 * G.buzz, 0, 1.6);   // 市场级注意力
+  G.volAcc = 0;
+  G.vol1 = G.vol1 * 0.99 + Math.abs(G.last / (G.ph[G.ph.length - 1] || G.last) - 1) * 0.01;
+  G.washBoost *= 0.9;
+  // 换手放大关注度：真实成交量本身就会带来热度
+  const turn = G.volAccPrev ? 0 : 0;
+
+  G.casc *= 0.996;
+  G.fear = clamp(G.casc / 4e5 + Math.max(0, -ret10()) * 22, 0, 1);
+  // 7) 用户暴露 / 风控
+  U.uVol24 *= 0.99999;
+  if (U.q > U.maxHold) U.maxHold = U.q;
+  G.vis = clamp(U.uVol24 / 1.5e6, 0, 1);
+  if (G.vis > 0.4 && G.whaleAlert < 1){ G.whaleAlert = 1; log('🐋 WhaleAlert：链上监测到巨鲸持续吸筹 MOON', 'warn'); }
+  if (G.vis > 0.8 && G.whaleAlert < 2){ G.whaleAlert = 2; log('🐋 WhaleAlert：巨鲸地址异动上了热搜，散户都在盯你', 'warn'); }
+  G.sus = Math.max(0, G.sus * 0.99935 - 0.002);
+  if (Math.abs(G.last / G.idx - 1) > 0.15) G.sus = Math.min(120, G.sus + 0.02);
+  if (G.sus >= 30 && !G.warned){ G.warned = true; log('🧯 交易所风控：账户交易行为异常，请合理交易（手续费费率上调）', 'warn'); }
+  if (G.sus < 20) G.warned = false;
+  if (G.sus >= 70 && !G.forced){
+    G.forced = true;
+    log('🧯 交易所风控：限制交易并强制减仓！', 'bad');
+    if (U.q > 0) uMarketSpot(-1, U.q * 0.2, 'u');
+    if (U.pos) perpMarket(-U.pos.side, U.pos.qty * 0.5);
+    G.sus = 55;
+  }
+  if (G.sus < 40) G.forced = false;
+  // 8) 资金费率
+  if (--G.fundT <= 0){
+    G.fundT = FUNDING_EVERY;
+    G.funding = clamp(1.3 * (G.lastP / G.idx - 1), -0.0075, 0.0075);
+    if (U.pos){ const pay = -U.pos.side * U.pos.qty * G.lastP * G.funding; U.cash += pay; }
+    log('⏰ 资金费率结算 ' + (G.funding * 100).toFixed(4) + '%（' + (G.funding > 0 ? '多付空' : '空付多') + '）');
+  }
+  // 9) K线与历史
+  if (!G.cur || G.t % CANDLE === 0){
+    if (G.cur) { G.candles.push(G.cur); if (G.candles.length > CANDLES_MAX) G.candles.shift(); }
+    G.cur = { t: G.t, o: G.last, h: G.last, l: G.last, c: G.last, v: 0, idx: G.idx, liqL: 0, liqS: 0 };
+  }
+  const cd = G.cur; cd.h = Math.max(cd.h, G.last); cd.l = Math.min(cd.l, G.last); cd.c = G.last; cd.v += G.volAcc;
+  cd.idx = G.idx;
+  G.ph.push(G.last); if (G.ph.length > 2400) G.ph.shift();
+  if (U.q > 1e7) G.peak = Math.max(G.peak, G.last); // 持仓超过1%流通时才记峰值
+  // 权益回撤
+  const eq = userEquity();
+  if (eq > G.peakEq) G.peakEq = eq;
+  const dd = 1 - eq / G.peakEq; if (dd > G.maxDD) G.maxDD = dd;
+}
+
+/* ---------- 结算：只呈报事实，不打分 ---------- */
+function grade(){
+  const eq = userEquity(), ret = eq / 5e6 - 1;
+  const exitEff = G.sellQty > 0 ? (G.sellNotional / G.sellQty) / G.peak : 0;
+  const harvest = G.cascQtyTotal > 0 ? Math.min(1, G.harvest / G.cascQtyTotal) : 0;
+  const ctrl = U.maxHold / FLOAT_TRAD;
+  return { eq, ret, exitEff, harvest, ctrl };
+}
+
+/* ================= UI ================= */
+if (HAS_DOM){
+  const $ = id => document.getElementById(id);
+  const bookEl = $('book'), tapeEl = $('tape'), logsEl = $('logs'), topEl = $('topbar');
+  let paused = true, speed = 1;
+
+  function ownColor(own){ return own === 'u' ? '#f59e0b' : own === 'wash' ? '#f59e0b' : own === 'ret' ? '#3b82f6' : own === 'arb' ? '#a855f7' : own === 'bot' ? '#14b8a6' : '#64748b'; }
+  function domOwn(lv){ let best = 'mm', bq = -1; const m = {}; for (const p of lv.parts){ m[p.own] = (m[p.own] || 0) + p.q; } for (const k in m) if (m[k] > bq){ bq = m[k]; best = k; } return best; }
+
+  function drawBook(){
+    const N = 11, asks = G.spot.asks.slice(0, N), bids = G.spot.bids.slice(0, N);
+    const mx = Math.max(1, ...asks.map(l => l.q), ...bids.map(l => l.q));
+    let h = '';
+    for (let i = N - 1; i >= 0; i--){
+      const lv = asks[i];
+      if (lv) h += '<div class="lv"><span class="num dn" style="width:64px">' + fmtP(lv.p) + '</span><span class="num" style="width:70px;text-align:right">' + fmtQ(lv.q) + '</span><div class="bar" style="width:' + (lv.q / mx * 80) + '%;background:rgba(34,197,94,.18)"></div><span class="tag" style="background:' + ownColor(domOwn(lv)) + '22;color:' + ownColor(domOwn(lv)) + '">' + (domOwn(lv) === 'u' ? '你' : domOwn(lv) === 'ret' ? '散' : domOwn(lv) === 'arb' ? '套' : domOwn(lv) === 'bot' ? 'bot' : 'MM') + '</span></div>';
+      else h += '<div class="lv dim">······</div>';
+    }
+    h += '<div class="mid num">≡ ' + fmtP(G.last) + ' ≡</div>';
+    for (let i = 0; i < N; i++){
+      const lv = bids[i];
+      if (lv) h += '<div class="lv"><span class="num up" style="width:64px">' + fmtP(lv.p) + '</span><span class="num" style="width:70px;text-align:right">' + fmtQ(lv.q) + '</span><div class="bar" style="width:' + (lv.q / mx * 80) + '%;background:rgba(239,68,68,.18)"></div><span class="tag" style="background:' + ownColor(domOwn(lv)) + '22;color:' + ownColor(domOwn(lv)) + '">' + (domOwn(lv) === 'u' ? '你' : domOwn(lv) === 'ret' ? '散' : domOwn(lv) === 'arb' ? '套' : domOwn(lv) === 'bot' ? 'bot' : 'MM') + '</span></div>';
+      else h += '<div class="lv dim">······</div>';
+    }
+    bookEl.innerHTML = h;
+    $('spreadInfo').textContent = (asks.length && bids.length) ? ('价差 ' + ((asks[0].p - bids[0].p) / G.last * 1e4).toFixed(1) + 'bp · 深度±2% ' + fmtQ(bookDepth(0.02)) + ' MOON') : '';
+  }
+  function bookDepth(frac){
+    let s = 0; const lo = G.last * (1 - frac), hi = G.last * (1 + frac);
+    for (const lv of G.spot.bids){ if (lv.p < lo) break; s += lv.q; }
+    for (const lv of G.spot.asks){ if (lv.p > hi) break; s += lv.q; }
+    return s;
+  }
+
+  const TAGS = { u: ['🐋你', '#f59e0b'], wash: ['🎭对敲', '#f59e0b'], ret: ['🧑散户', '#3b82f6'], bot: ['🤖趋势', '#14b8a6'], arb: ['⚖️套利', '#a855f7'], liq: ['💥强平', '#ef4444'], stop: ['🛑止损', '#f97316'], mm: ['MM', '#64748b'] };
+  function drawTape(){
+    let h = '';
+    for (let i = 0; i < Math.min(22, TAPE.length); i++){
+      const t = TAPE[i], tg = TAGS[t.tag] || TAGS.mm;
+      h += '<div><span class="dim">' + fmtT(t.t).slice(3) + '</span> <span class="num ' + (t.side > 0 ? 'up' : 'dn') + '">' + fmtP(t.p) + '</span> <span class="num">' + fmtQ(t.q) + '</span> <span style="color:' + tg[1] + '">' + tg[0] + '</span></div>';
+    }
+    tapeEl.innerHTML = h;
+  }
+  function drawLogs(){
+    let h = '';
+    for (let i = 0; i < Math.min(60, LOGS.length); i++){ const l = LOGS[i]; h += '<div><span class="dim">' + fmtT(l.t) + '</span> <span class="' + (LOGC[l.cls] || '') + '">' + l.msg + '</span></div>'; }
+    logsEl.innerHTML = h;
+  }
+
+  function drawTop(){
+    const eq = userEquity(), roi = eq / 5e6 - 1;
+    const ch4 = G.candles.length > 240 ? G.last / G.candles[G.candles.length - 240].o - 1 : 0;
+    const ft = Math.floor(G.fundT / 3600) + ':' + ('0' + Math.floor(G.fundT % 3600 / 60)).slice(-2);
+    const pos = U.pos ? ('<b class="' + (U.pos.side > 0 ? 'up' : 'dn') + '">' + (U.pos.side > 0 ? '多' : '空') + '</b> ' + fmtQ(U.pos.qty) + '@' + fmtP(U.pos.entry) + ' ' + U.pos.lev + 'x · uPnL <b class="' + (upnl() >= 0 ? 'up' : 'dn') + '">' + fmtU(upnl()) + '</b>') : '空仓';
+    topEl.innerHTML =
+      '<span class="chip">⏱ ' + fmtT(G.t) + '</span>' +
+      '<span class="chip">MOON <b class="num ' + (ch4 >= 0 ? 'up' : 'dn') + '">' + fmtP(G.last) + ' (' + (ch4 * 100).toFixed(1) + '%/4h)</b></span>' +
+      '<span class="chip dim">锚 ' + fmtP(G.idx) + ' · 永续 ' + fmtP(G.lastP) + '</span>' +
+      '<span class="chip">💰 ' + fmtU(U.cash) + ' U</span>' +
+      '<span class="chip">🪙 ' + fmtQ(U.q) + '@' + fmtP(U.costP) + '</span>' +
+      '<span class="chip">📊 ' + pos + '</span>' +
+      '<span class="chip">💵 权益 <b class="' + (roi >= 0 ? 'up' : 'dn') + '">' + fmtU(eq) + ' (' + (roi * 100).toFixed(1) + '%)</b></span>' +
+      '<span class="chip">🔥 热度 ' + (G.heat * 100).toFixed(0) + '%</span>' +
+      '<span class="chip">🌡 恐惧 ' + (G.fear * 100).toFixed(0) + '%</span>' +
+      '<span class="chip">🧯 风控 <span class="bar2"><i style="width:' + Math.min(100, G.sus) + '%;background:' + (G.sus > 60 ? '#ef4444' : G.sus > 30 ? '#f59e0b' : '#22c55e') + '"></i></span> ' + G.sus.toFixed(0) + '</span>' +
+      '<span class="chip">🐋 曝光 ' + (G.vis * 100).toFixed(0) + '%</span>' +
+      '<span class="chip">⏰ 费率 ' + (G.funding * 100).toFixed(3) + '% · ' + ft + '</span>';
+  }
+
+  function fit(cv){ const r = cv.getBoundingClientRect(); if (cv.width !== r.width | 0 || cv.height !== r.height | 0){ cv.width = r.width | 0; cv.height = r.height | 0; } const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); return c; }
+
+  function drawChart(){
+    const cv = $('chart'), c = fit(cv), W = cv.width, H = cv.height;
+    c.fillStyle = '#0d1119'; c.fillRect(0, 0, W, H);
+    const cs = G.candles.slice(-240); if (!cs.length) return;
+    const padR = 56, padB = 22, volH = 60, top = 8;
+    const ph = H - padB - volH - top;
+    let lo = 1e9, hi = 0, vmax = 0;
+    for (const k of cs){ lo = Math.min(lo, k.l, god() ? k.idx : 1e9); hi = Math.max(hi, k.h, god() ? k.idx : 0); vmax = Math.max(vmax, k.v); }
+    const pad = (hi - lo) * 0.06 || 0.001; lo -= pad; hi += pad;
+    const X = i => i / (cs.length - 1 || 1) * (W - padR - 6) + 3;
+    const Y = p => top + (1 - (p - lo) / (hi - lo)) * ph;
+    // 网格与轴
+    c.strokeStyle = '#161d2b'; c.fillStyle = '#475569'; c.font = '10px Consolas'; c.textAlign = 'left';
+    for (let i = 0; i <= 5; i++){ const p = lo + (hi - lo) * i / 5, y = Y(p); c.beginPath(); c.moveTo(0, y); c.lineTo(W - padR, y); c.stroke(); c.fillText(fmtP(p), W - padR + 4, y + 3); }
+    // 指数锚
+    if (god()){ c.strokeStyle = 'rgba(148,163,184,.5)'; c.setLineDash([3, 3]); c.beginPath(); cs.forEach((k, i) => { const x = X(i), y = Y(k.idx); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.setLineDash([]); }
+    // K线
+    const bw = Math.max(1.5, (W - padR - 6) / cs.length - 1);
+    for (let i = 0; i < cs.length; i++){
+      const k = cs[i], x = X(i), up = k.c >= k.o;
+      c.strokeStyle = c.fillStyle = up ? '#ef4444' : '#22c55e';
+      c.beginPath(); c.moveTo(x, Y(k.h)); c.lineTo(x, Y(k.l)); c.stroke();
+      const yo = Y(k.o), yc = Y(k.c);
+      c.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yc - yo)));
+      // 成交量
+      c.fillStyle = up ? 'rgba(239,68,68,.35)' : 'rgba(34,197,94,.35)';
+      const vh = k.v / (vmax || 1) * (volH - 8);
+      c.fillRect(x - bw / 2, H - padB - vh, bw, vh);
+      // 强平标记
+      if (k.liqL || k.liqS){
+        const s = Math.min(5, 1.5 + Math.log10(1 + k.liqL + k.liqS) * 1.2);
+        c.fillStyle = k.liqL > k.liqS ? '#ef4444' : '#22d3ee';
+        c.beginPath(); c.arc(x, H - padB + 6, s, 0, 7); c.fill();
+      }
+    }
+    // MA20
+    c.strokeStyle = 'rgba(245,158,11,.7)'; c.beginPath();
+    for (let i = 19; i < cs.length; i++){ let s = 0; for (let j = i - 19; j <= i; j++) s += cs[j].c; const y = Y(s / 20); const x = X(i); i === 19 ? c.moveTo(x, y) : c.lineTo(x, y); }
+    c.stroke();
+    // 用户成交标记
+    const t0 = (G.t - cs.length * CANDLE);
+    c.textAlign = 'center';
+    for (const m of G.marks){ if (m.bk !== 's') continue; const ci = Math.floor(m.t / CANDLE); const idx = ci - (Math.ceil(G.t / CANDLE) - cs.length); if (idx >= 0 && idx < cs.length){ const x = X(idx), y = Y(m.p); c.fillStyle = m.side > 0 ? '#f59e0b' : '#8b5cf6'; c.beginPath(); if (m.side > 0){ c.moveTo(x, y - 6); c.lineTo(x - 4, y + 2); c.lineTo(x + 4, y + 2); } else { c.moveTo(x, y + 6); c.lineTo(x - 4, y - 2); c.lineTo(x + 4, y - 2); } c.closePath(); c.fill(); } }
+    // 现价
+    c.strokeStyle = '#f59e0b'; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(0, Y(G.last)); c.lineTo(W - padR, Y(G.last)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = '#f59e0b'; c.fillRect(W - padR + 2, Y(G.last) - 8, padR - 4, 16);
+    c.fillStyle = '#000'; c.textAlign = 'left'; c.fillText(fmtP(G.last), W - padR + 5, Y(G.last) + 4);
+    c.fillStyle = '#475569'; c.textAlign = 'center';
+    c.fillText(fmtT(cs[0].t).slice(3), X(0), H - 6); c.fillText(fmtT(cs[cs.length - 1].t).slice(3), X(cs.length - 1), H - 6);
+    c.textAlign = 'left'; c.fillStyle = '#64748b';
+    c.fillText('● 多头强平  ● 空头强平  ▲你的买  ▼你的卖  ——MA20', 6, 12);
+  }
+  function god(){ return $('cGod') && $('cGod').checked; }
+
+  function drawHeat(){
+    const cv = $('heat'), c = fit(cv), W = cv.width, H = cv.height;
+    c.fillStyle = '#0d1119'; c.fillRect(0, 0, W, H);
+    const lo = G.markE * 0.92, hi = G.markE * 1.08, N = 46;
+    const bins = new Array(N).fill(0), binsS = new Array(N).fill(0);
+    for (const k of perpClusters){
+      const add = (p, q, arr) => { const i = Math.floor((p - lo) / (hi - lo) * N); if (i >= 0 && i < N) arr[i] += q; };
+      if (k.side > 0){ if (k.stopP) add(k.stopP, k.qty, bins); add(k.liqP, k.qty, bins); } else { if (k.stopP) add(k.stopP, k.qty, binsS); add(k.liqP, k.qty, binsS); }
+    }
+    if (U.pos){ const lp = U.pos.side > 0 ? U.pos.entry * (1 - 1 / U.pos.lev + 0.006) : U.pos.entry * (1 + 1 / U.pos.lev - 0.006); const i = Math.floor((lp - lo) / (hi - lo) * N); if (i >= 0 && i < N) bins[i] += U.pos.qty; }
+    const mx = Math.max(1, ...bins, ...binsS);
+    const yMark = (1 - (clamp(G.markE, lo, hi) - lo) / (hi - lo)) * H;
+    for (let i = 0; i < N; i++){
+      const y = (1 - (i + 1) / N) * H, h = H / N - 1;
+      const wL = bins[i] / mx * (W * 0.45), wS = binsS[i] / mx * (W * 0.45);
+      c.fillStyle = 'rgba(239,68,68,.75)'; c.fillRect(W / 2 - wL, y, wL, h);
+      c.fillStyle = 'rgba(34,211,238,.7)'; c.fillRect(W / 2, y, wS, h);
+    }
+    c.strokeStyle = '#f59e0b'; c.beginPath(); c.moveTo(0, yMark); c.lineTo(W, yMark); c.stroke();
+    c.fillStyle = '#64748b'; c.font = '10px sans-serif';
+    c.fillText('◀ 多头要爆的 (红色=燃料)', 4, H - 4); c.textAlign = 'right'; c.fillText('空头要爆的 (青色) ▶', W - 4, H - 4); c.textAlign = 'left';
+    const longQ = perpClusters.filter(k => k.side > 0).reduce((s, k) => s + k.qty, 0);
+    const shortQ = perpClusters.filter(k => k.side < 0).reduce((s, k) => s + k.qty, 0);
+    $('oiInfo').textContent = 'OI ' + fmtQ(longQ + shortQ) + ' · 多空比 ' + (longQ / Math.max(1, longQ + shortQ) * 100).toFixed(0) + '%';
+  }
+  function gauss(x, mu, sig){ const z = (x - mu) / sig; return Math.exp(-0.5 * z * z) / (sig * 2.5066); }
+  function drawChip(){
+    const cv = $('chip'), c = fit(cv), W = cv.width, H = cv.height;
+    c.fillStyle = '#0d1119'; c.fillRect(0, 0, W, H);
+    const src = AGENTS.filter(a => a.qty > 1).map(a => ({ mu: a.ref, q: a.qty, sig: a.ref * 0.025 }));
+    src.push({ mu: U.costP || G.last, q: U.q, sig: 0.05 });
+    src.push({ mu: G.idx * 0.97, q: 0.4e8, sig: 0.1 }); // 做市商库存
+    const lo = G.last * 0.55, hi = Math.max(G.last * 1.45, G.idx * 1.3), N = 60;
+    const bins = new Array(N).fill(0); let tot = 0;
+    for (let i = 0; i < N; i++){ const p = lo + (hi - lo) * (i + 0.5) / N; let s = 0; for (const b of src) s += b.q * gauss(p, b.mu, b.sig); bins[i] = s; tot += s; }
+    const mx = Math.max(...bins);
+    let profit = 0;
+    for (let i = 0; i < N; i++){ const p = lo + (hi - lo) * (i + 0.5) / N; if (p < G.last) profit += bins[i]; }
+    const yP = (1 - (G.last - lo) / (hi - lo)) * H;
+    for (let i = 0; i < N; i++){
+      const y = (1 - (i + 1) / N) * H, h = H / N - 1;
+      const p = lo + (hi - lo) * (i + 0.5) / N;
+      const w = bins[i] / mx * (W - 46);
+      c.fillStyle = p < G.last ? 'rgba(239,68,68,.7)' : 'rgba(34,197,94,.7)';
+      c.fillRect(0, y, w, h);
+    }
+    c.strokeStyle = '#f59e0b'; c.beginPath(); c.moveTo(0, yP); c.lineTo(W, yP); c.stroke();
+    c.fillStyle = '#94a3b8'; c.font = '10px sans-serif'; c.textAlign = 'right';
+    c.fillText('获利盘 ' + (profit / tot * 100).toFixed(0) + '%', W - 4, 12); c.textAlign = 'left';
+    $('chipInfo').textContent = '现价 ' + fmtP(G.last) + ' · 你的成本 ' + fmtP(U.costP);
+  }
+
+  let frame = 0;
+  function render(){ drawTop(); drawChart(); drawBook(); drawTape(); drawLogs(); drawHeat(); drawChip(); }
+
+  function loop(){ if (paused) return; for (let i = 0; i < speed; i++) step(); if ((frame++ & 1) === 0) render(); }
+
+  /* --- 交互 --- */
+  const qi = id => parseFloat($(id).value) || 0;
+  function direct(id, fn){ $(id).addEventListener('click', e => { try { fn(); } catch (err){ log('⚠️ ' + err.message, 'bad'); console.error(err); } render(); }); }
+  direct('bBuyS', () => uMarketSpot(1, qi('iQtyS')));
+  direct('bSellS', () => uMarketSpot(-1, qi('iQtyS')));
+  direct('bPct1', () => uMarketSpot(1, U.cash * 0.01 * 0.995 / G.last));
+  direct('bPct5', () => uMarketSpot(1, U.cash * 0.05 * 0.995 / G.last));
+  direct('bPct25', () => uMarketSpot(-1, U.q * 0.25));
+  direct('bPctAll', () => uMarketSpot(-1, U.q));
+  direct('bLmtB', () => { const p = qi('iLmtP') || roundP(G.last * 0.99); placeLimit('s', 1, p, qi('iLmtQ')); });
+  direct('bLmtS', () => { const p = qi('iLmtP') || roundP(G.last * 1.01); placeLimit('s', -1, p, qi('iLmtQ')); });
+  direct('bWash', () => doWash(qi('iWashQ')));
+  direct('bSpoofB', () => spoofWall(1, qi('iSpoofQ')));
+  direct('bSpoofS', () => spoofWall(-1, qi('iSpoofQ')));
+  direct('bCancelAll', () => { const n = U.orders.length; for (const o of U.orders.slice()) cancelOrder(o); log('已撤销 ' + n + ' 笔挂单'); });
+  direct('bPump', () => { let q = 0; for (const lv of G.spot.asks.slice(0, 5)) q += lv.q; uMarketSpot(1, q * 1.05); });
+  direct('bDump', () => { let q = 0; for (const lv of G.spot.bids.slice(0, 5)) q += lv.q; uMarketSpot(-1, q * 1.05); });
+  direct('bLongP', () => { U.defLev = parseInt($('iLev').value); perpMarket(1, qi('iQtyP')); });
+  direct('bShortP', () => { U.defLev = parseInt($('iLev').value); perpMarket(-1, qi('iQtyP')); });
+  direct('bHalfP', () => { if (U.pos) perpMarket(-U.pos.side, U.pos.qty * 0.5); });
+  direct('bCloseP', () => { if (U.pos) perpMarket(-U.pos.side, U.pos.qty); });
+  direct('bStep', () => { step(); render(); });
+  direct('bHop', () => { const n = 3600; for (let i = 0; i < n; i++) step(); render(); });
+  direct('bReset', () => { init(); paused = true; render(); });
+  direct('bPause', () => { paused = true; });
+  direct('bPlay', () => { paused = false; speed = 1; });
+  direct('bFast', () => { paused = false; speed = 8; });
+  direct('bSettle', () => {
+    const r = grade();
+    $('modalBox').innerHTML = '<h2 style="margin:0 0 10px">🧾 操盘结果</h2>' +
+      '<table class="st">' +
+      '<tr><td>最终权益</td><td class="num">' + fmtU(r.eq) + ' USDT</td></tr>' +
+      '<tr><td>收益率</td><td class="num ' + (r.ret >= 0 ? 'up' : 'dn') + '">' + (r.ret * 100).toFixed(2) + '%</td></tr>' +
+      '<tr><td>已实现盈亏</td><td class="num ' + (U.realized >= 0 ? 'up' : 'dn') + '">' + fmtU(U.realized) + '</td></tr>' +
+      '<tr><td>剩余持仓</td><td class="num">' + fmtQ(U.q) + ' MOON（' + fmtU(U.q * G.last) + '）</td></tr>' +
+      '<tr><td>持仓成本 / 现价</td><td class="num">' + fmtP(U.costP) + ' / ' + fmtP(G.last) + '</td></tr>' +
+      '<tr><td>总手续费</td><td class="num">' + fmtU(U.fees) + '</td></tr>' +
+      '<tr><td>出货均价 / 期间峰值</td><td class="num">' + fmtP(G.sellQty > 0 ? G.sellNotional / G.sellQty : 0) + ' / ' + fmtP(G.peak) + '</td></tr>' +
+      '<tr><td>最大控盘度</td><td class="num">' + (r.ctrl * 100).toFixed(1) + '% 流通盘</td></tr>' +
+      '<tr><td>最大权益回撤</td><td class="num">' + (G.maxDD * 100).toFixed(1) + '%</td></tr>' +
+      '<tr><td>强平/止损收割占比</td><td class="num">' + (r.harvest * 100).toFixed(0) + '%</td></tr>' +
+      '<tr><td>对敲 / 被识别 / 挂撤异常</td><td class="num">' + U.washes + ' / ' + U.detected + ' / ' + U.spoofCancels + '</td></tr>' +
+      '<tr><td>被强平次数</td><td class="num">' + U.liqed + '</td></tr>' +
+      '</table>' +
+      '<div class="row"><button class="btn" onclick="document.getElementById(\'modal\').style.display=\'none\'">继续操盘</button></div>';
+    $('modal').style.display = 'flex';
+  });
+
+  window.addEventListener('error', e => { try { log('⚠️ 运行错误: ' + e.message, 'bad'); } catch (_) {} });
+  window.addEventListener('resize', render);
+  init(); render();
+  setInterval(loop, 33);
+}
+</script>
+</body>
+</html>
