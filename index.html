@@ -52,8 +52,8 @@ details.more .k{color:var(--dim2)}
 details.more .v{color:#dcdcdc;text-align:right}
 
 /* ---------- 三栏 ---------- */
-#layout{flex:1;display:grid;grid-template-columns:206px minmax(0,1fr) 250px;min-height:0;overflow:hidden}
-.col{display:flex;flex-direction:column;min-height:0}
+#layout{flex:1;display:grid;grid-template-columns:206px minmax(0,1fr) 250px;grid-template-rows:minmax(0,1fr);min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .side-l{border-right:1px solid var(--bd);overflow-y:auto}
 .side-r{border-left:1px solid var(--bd)}
 .panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
@@ -177,18 +177,18 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--d
 label.chk input{width:auto;margin:0;accent-color:#f0b90b}
 
 /* ---------- 订单簿 ---------- */
-.obhead{display:grid;grid-template-columns:1fr 1fr 1fr 16px;gap:6px;padding:3px 12px 4px;
+.obhead{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:3px 12px 4px;
   font-size:10.5px;color:var(--dim3)}
 .obhead span:nth-child(2),.obhead span:nth-child(3){text-align:right}
 #book{flex:1;overflow:hidden;padding-bottom:2px}
-.lv{display:grid;grid-template-columns:1fr 1fr 1fr 16px;gap:6px;align-items:center;position:relative;
-  padding:1.5px 12px;font-size:12px;line-height:1.5;cursor:default}
+.lv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:center;position:relative;
+  padding:1.5px 12px 1.5px 14px;font-size:12px;line-height:1.5;cursor:default}
 .lv:hover{background:#0d0d0d}
 .lv .bar{position:absolute;right:0;top:0;bottom:0;z-index:0;opacity:.55}
 .lv span{position:relative;z-index:1}
 .lv .nm{text-align:right}
 .lv .dim{display:block;text-align:center;color:#2a2a2a;font-size:11px;padding:1px 0}
-.lv .tg{font-size:9px;text-align:right;opacity:.8;position:relative;z-index:1}
+.lv::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--own);opacity:.85}
 .obmid{text-align:center;padding:5px 0;font-size:13px;font-weight:600;color:#fff;
   border-top:1px solid #141414;border-bottom:1px solid #141414;background:#0a0a0a}
 
@@ -474,7 +474,7 @@ table.st td:last-child{text-align:right;color:#dcdcdc;font-variant-numeric:tabul
   <aside class="col side-r">
     <div class="panel grow" data-mp="book">
       <div class="ph"><span>订单簿</span><span class="ph-sub">合计(MOON)</span></div>
-      <div class="obhead"><span>价格(USDT)</span><span>数量</span><span>合计</span><span></span></div>
+      <div class="obhead"><span>价格(USDT)</span><span>数量</span><span>合计</span></div>
       <div id="book"></div>
     </div>
     <div class="panel grow" data-mp="tape">
@@ -1469,11 +1469,10 @@ if (HAS_DOM){
     const col = ownColor(own);
     const barCol = cls === 'up' ? 'rgba(37,167,80,.14)' : 'rgba(202,63,100,.14)';
     const w = Math.min(100, cum / mx * 100);
-    const lbl = OWN_LABEL[own];
-    return '<div class="lv"><span class="num ' + cls + '">' + fmtP(lv.p) + '</span>' +
+    return '<div class="lv" style="--own:' + col + '" title="来源 ' + (OWN_LABEL[own] || own) + '">' +
+           '<span class="num ' + cls + '">' + fmtP(lv.p) + '</span>' +
            '<span class="num nm">' + fmtQ(lv.q) + '</span>' +
            '<span class="num nm" style="color:#909090">' + fmtQ(cum) + '</span>' +
-           '<span class="tg" style="color:' + col + '">' + (lbl || '') + '</span>' +
            '<div class="bar" style="width:' + w + '%;background:' + barCol + '"></div></div>';
   }
   function drawBook(){
