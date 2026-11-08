@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>probe</title>
+<style>html,body{margin:0;background:#000;color:#0f0;font:28px/1.6 monospace}div{padding:20px}</style>
+<div id=o>loading…</div>
+<script>
+function upd(){
+  document.getElementById('o').textContent =
+    'innerWidth = '+innerWidth+'\n'+
+    'innerHeight = '+innerHeight+'\n'+
+    'dpr = '+devicePixelRatio+'\n'+
+    'search = '+location.search+'\n'+
+    'docH = '+document.documentElement.scrollHeight;
+}
+upd(); setInterval(upd, 500);
+</script>
