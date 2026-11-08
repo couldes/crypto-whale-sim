@@ -2051,13 +2051,21 @@ if (HAS_DOM){
       'font:11px/1.5 monospace;padding:5px 7px;white-space:pre;pointer-events:none';
     document.body.appendChild(d);
     const m = el => { const n = document.querySelector(el); return n ? (n.offsetTop + '/' + n.offsetHeight) : '-'; };
-    const upd = () => { d.textContent =
-      'win ' + innerWidth + 'x' + innerHeight + '  docH ' + document.documentElement.scrollHeight +
-      '\nlayout h=' + $('layout').offsetHeight +
-      '\nmid   ' + m('.mid') + '   pair ' + m('#pairhead') + '   tab ' + m('.tabrow') +
-      '\ncpane ' + m('[data-cpane="chart"]') + '   cbox ' + m('.chartbox') +
-      '\ntradePanel ' + m('#tradePanel') + '  btns ' + m('.tf-btns') +
-      '\nsideR ' + m('.side-r') + '  bookH ' + m('#book') + '  tapeH ' + m('#tape'); };
+    const upd = () => {
+      const W = document.documentElement.clientWidth;
+      const wide = [];
+      document.querySelectorAll('#app *').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.right > W + 1 && r.width > 30){
+          wide.push((el.id || el.className || el.tagName).toString().slice(0, 22) + ' r=' + Math.round(r.right));
+        }
+      });
+      d.textContent =
+        'win ' + innerWidth + 'x' + innerHeight + ' client ' + W + ' docW ' + document.documentElement.scrollWidth +
+        '\nlayout h=' + $('layout').offsetHeight + '  tradePanel ' + m('#tradePanel') +
+        '\nsideR ' + m('.side-r') + ' bookH ' + m('#book') + ' tapeH ' + m('#tape') +
+        '\n溢出元素(' + wide.length + '): ' + wide.slice(0, 6).join(' | ');
+    };
     upd(); setInterval(upd, 400);
   }
   init();                 // 先建好市场，让选择弹窗背后有真实行情在动
