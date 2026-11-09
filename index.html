@@ -205,7 +205,7 @@ label.chk input{width:auto;margin:0;accent-color:#f0b90b}
 
 /* ---------- 成交明细 ---------- */
 #tape{padding:2px 0;font-size:12px}
-#tape>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 62px;gap:6px;padding:1.5px 12px;line-height:1.5}
+#tape>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 54px;gap:6px;padding:1.5px 12px;line-height:1.5}
 #tape>div span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tape>div span:nth-child(2){text-align:right}
 #tape>div span:nth-child(3){text-align:right;font-size:10.5px}
@@ -1507,7 +1507,8 @@ if (HAS_DOM){
     return s;
   }
 
-  const TAGS = { u: ['🐋你', '#ffa726'], wash: ['🎭对敲', '#ffa726'], ret: ['🧑散户', '#3b82f6'], bot: ['🤖趋势', '#27c6da'], arb: ['⚖️套利', '#a855f7'], team: ['🏢项目方', '#ec4899'], liq: ['💥强平', '#ca3f64'], stop: ['🛑止损', '#f97316'], mm: ['MM', '#787878'] };
+  // 成交明细只留文字+颜色（OKX 的 tape 不含图标，且窄列放不下 emoji）
+  const TAGS = { u: ['你', '#ffa726'], wash: ['对敲', '#ffa726'], ret: ['散户', '#3b82f6'], bot: ['趋势', '#27c6da'], arb: ['套利', '#a855f7'], team: ['项目方', '#ec4899'], liq: ['强平', '#ca3f64'], stop: ['止损', '#f97316'], mm: ['MM', '#787878'] };
   function drawTape(){
     let h = '';
     for (let i = 0; i < Math.min(26, TAPE.length); i++){
