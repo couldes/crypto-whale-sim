@@ -1719,12 +1719,15 @@ if (HAS_DOM){
     c.fillText(fmtP(G.last), W - padR + 5, yl);
 
     c.fillStyle = '#5c5c5c'; c.font = '10px Inter,Consolas,monospace'; c.textAlign = 'center'; c.textBaseline = 'top';
-    const ticks = Math.min(6, cs.length);
+    // 时间轴标签数按可用宽度决定，窄屏省掉秒，避免标签互相压住
+    const narrow = W < 560;
+    const ticks = Math.min(6, Math.max(2, Math.floor(plotW / (narrow ? 58 : 86))), cs.length);
     for (let i = 0; i < ticks; i++){
       const idx = Math.round(i * (cs.length - 1) / Math.max(1, ticks - 1));
       const tx0 = X(idx);
-      c.textAlign = tx0 < 34 ? 'left' : (tx0 > W - padR - 34 ? 'right' : 'center');
-      c.fillText(fmtT(cs[idx].t).slice(3), tx0, H - padB + 4);
+      c.textAlign = tx0 < 30 ? 'left' : (tx0 > W - padR - 30 ? 'right' : 'center');
+      const full = fmtT(cs[idx].t).slice(3);
+      c.fillText(narrow ? full.slice(0, 5) : full, tx0, H - padB + 4);
     }
     c.textAlign = 'left';
 
